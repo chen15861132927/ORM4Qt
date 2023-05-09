@@ -5,6 +5,10 @@ VisualStudioVersion = 16.0.33328.57
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ORM4Qt", "src\ORM4Qt\ORM4Qt.vcxproj", "{D7BC338D-7FFD-44EF-BB0B-29947299755E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{56A6A0F4-741C-4D11-949D-52AA760BA682}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{DF5B8453-73A5-447E-BD4E-28980D399914}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -18,6 +22,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D7BC338D-7FFD-44EF-BB0B-29947299755E} = {56A6A0F4-741C-4D11-949D-52AA760BA682}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FBFB1978-28E1-4C0F-8ACD-42DEB5B3F400}
