@@ -9,6 +9,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{56A6A0F4-741
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{DF5B8453-73A5-447E-BD4E-28980D399914}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ORM_Model", "test\ORM_Model\ORM_Model.vcxproj", "{7CCAE73D-ACC7-450D-AC0D-D82D90133D51}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ORM_MainTestQtConsole", "test\ORM_MainTestQtConsole\ORM_MainTestQtConsole.vcxproj", "{DAC62D46-A776-4521-91C5-A8C269DD8DC1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -19,12 +23,22 @@ Global
 		{D7BC338D-7FFD-44EF-BB0B-29947299755E}.Debug|x64.Build.0 = Debug|x64
 		{D7BC338D-7FFD-44EF-BB0B-29947299755E}.Release|x64.ActiveCfg = Release|x64
 		{D7BC338D-7FFD-44EF-BB0B-29947299755E}.Release|x64.Build.0 = Release|x64
+		{7CCAE73D-ACC7-450D-AC0D-D82D90133D51}.Debug|x64.ActiveCfg = Debug|x64
+		{7CCAE73D-ACC7-450D-AC0D-D82D90133D51}.Debug|x64.Build.0 = Debug|x64
+		{7CCAE73D-ACC7-450D-AC0D-D82D90133D51}.Release|x64.ActiveCfg = Release|x64
+		{7CCAE73D-ACC7-450D-AC0D-D82D90133D51}.Release|x64.Build.0 = Release|x64
+		{DAC62D46-A776-4521-91C5-A8C269DD8DC1}.Debug|x64.ActiveCfg = Debug|x64
+		{DAC62D46-A776-4521-91C5-A8C269DD8DC1}.Debug|x64.Build.0 = Debug|x64
+		{DAC62D46-A776-4521-91C5-A8C269DD8DC1}.Release|x64.ActiveCfg = Release|x64
+		{DAC62D46-A776-4521-91C5-A8C269DD8DC1}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D7BC338D-7FFD-44EF-BB0B-29947299755E} = {56A6A0F4-741C-4D11-949D-52AA760BA682}
+		{7CCAE73D-ACC7-450D-AC0D-D82D90133D51} = {DF5B8453-73A5-447E-BD4E-28980D399914}
+		{DAC62D46-A776-4521-91C5-A8C269DD8DC1} = {DF5B8453-73A5-447E-BD4E-28980D399914}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FBFB1978-28E1-4C0F-8ACD-42DEB5B3F400}
