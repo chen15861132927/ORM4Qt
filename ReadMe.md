@@ -19,9 +19,8 @@ my local mysql version is 8.0, Connector C++ 8.0
   
   reference link https://zhuanlan.zhihu.com/p/426881614
   
-			           https://stackoverflow.com/questions/6483523/qt-how-to-getcompile-mysql-driver
+			     https://stackoverflow.com/questions/6483523/qt-how-to-getcompile-mysql-driver
                  
-
 2.libssl-1_1-x64.dll libcrypto-1_1-x64.dll 
 
   you can copy from C:\Program Files\MySQL\Connector C++ 8.0\lib64 folder.
