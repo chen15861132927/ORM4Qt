@@ -87,7 +87,6 @@
   <ItemGroup>
     <ClInclude Include="orm_model_global.h" />
     <QtMoc Include="ORM_Model.h" />
-    <ClCompile Include="ORM_Model.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\ORM4Qt\ORM4Qt.vcxproj">

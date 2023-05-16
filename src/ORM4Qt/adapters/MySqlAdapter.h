@@ -1,7 +1,7 @@
 #pragma once
 #include "sqladapter.h"
 
-class MySqlAdapter : public SqlAdapter
+class ORM4QT_EXPORT MySqlAdapter : public SqlAdapter
 {
 public:
     MySqlAdapter();
