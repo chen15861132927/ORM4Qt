@@ -14,6 +14,7 @@
 # define ORM4QT_EXPORT
 #endif
 
+#define idColumnName  "id"
 
 /*! \file
 */
@@ -39,41 +40,45 @@
         m_hasUnsavedChanges = true; \
         if(!m_propertiesForUpdate.contains(#name)) \
             m_propertiesForUpdate.append(#name); \
-    }
+    }\
+    QString getColumnNameOf_##name##() const \
+    { \
+        return #name; \
+    } \
 
  /*!
-    \def ORM_HAS_ONE(ClassName)
-    Declares HAS_ONE relation. Example:
-    \code
-    class DriverLicense : public ORMObject<DriverLicense>
-    {
-        ...
-    };
+	\def ORM_HAS_ONE(ClassName)
+	Declares HAS_ONE relation. Example:
+	\code
+	class DriverLicense : public ORMObject<DriverLicense>
+	{
+		...
+	};
 
-    class CarDriver : public ORMObject<CarDriver>
-    {
-        ...
-        ORM_HAS_ONE(DriverLicense)
+	class CarDriver : public ORMObject<CarDriver>
+	{
+		...
+		ORM_HAS_ONE(DriverLicense)
 
-     public:
-        CarDriver() {}
-    };
-    \endcode
-    Macros generate next methods:
+	 public:
+		CarDriver() {}
+	};
+	\endcode
+	Macros generate next methods:
 
-    <b>\a ClassName get\a ClassName() \n</b>
-    Returns child \a ClassName, associated with model or 0, if no such child object.
+	<b>\a ClassName get\a ClassName() \n</b>
+	Returns child \a ClassName, associated with model or 0, if no such child object.
 
-    <b>void set\a ClassName(const \a Classname &object) \n</b>
-    Assigns \a object with model. If the child exists, it is updated with new values.\n
-    \b NOTE: \a object must exists in table!
+	<b>void set\a ClassName(const \a Classname &object) \n</b>
+	Assigns \a object with model. If the child exists, it is updated with new values.\n
+	\b NOTE: \a object must exists in table!
 
-    <b>\a std::shared_ptr<ClassName> create\a ClassName(const QHash<QString, QVariant> &values) \n</b>
-    Creates new \a ClassName object from QHash<fieldName, value> \a values and call save() method. After assigns \a object with model
-    and return pointer to it.
+	<b>\a std::shared_ptr<ClassName> create\a ClassName(const QHash<QString, QVariant> &values) \n</b>
+	Creates new \a ClassName object from QHash<fieldName, value> \a values and call save() method. After assigns \a object with model
+	and return pointer to it.
 
-    <b>\a std::shared_ptr<ClassName> get<em>ClassName</em>AfterIncludes() const \n </b>
-    Returns pointer to \a ClassName that be loaded by includes(..) method.
+	<b>\a std::shared_ptr<ClassName> get<em>ClassName</em>AfterIncludes() const \n </b>
+	Returns pointer to \a ClassName that be loaded by includes(..) method.
 
   */
 
@@ -89,10 +94,10 @@
     { \
         if(id < 0) \
             return 0; \
-        QString whereString = QString("WHERE %1_id = %2") \
-                                .arg(metaObject()->className()) \
+        QString whereString = QString("WHERE %1_"+getColumnNameOf_id()+" = %2") \
+                                .arg(getMapDBTableName()) \
                                 .arg(id); \
-        QList<QSqlRecord> list = ORMDatabase::adapter->find( #ClassName, "*", whereString); \
+        QList<QSqlRecord> list = ORMDatabase::adapter->find(#ClassName, "*", whereString); \
         if(list.isEmpty()) \
             return 0; \
         else \
@@ -103,16 +108,16 @@
         if(childId < 0 || id < 0) \
             return; \
         QHash<QString, QVariant> hash; \
-        hash.insert(QString(metaObject()->className()) + "_id", id); \
+        hash.insert(QString(getMapDBTableName()) + "_"+getColumnNameOf_id(), id); \
         ORMDatabase::adapter->updateRecord(#ClassName, childId, hash); \
     } \
     std::shared_ptr<ClassName> create##ClassName(QHash<QString, QVariant> &values) \
     { \
         if(id < 0) \
             return 0; \
-        values.insert(QString("%1_id").arg(metaObject()->className()), id); \
+        values.insert(QString("%1_"+getColumnNameOf_id()).arg(getMapDBTableName()), id); \
         int childId = ORMDatabase::adapter->addRecord(#ClassName, values); \
-        return translateRecToObj<ClassName>(ORMDatabase::adapter->find(#ClassName, "*","WHERE id = " + QString::number(childId)).first()); \
+        return translateRecToObj<ClassName>(ORMDatabase::adapter->find(#ClassName, "*","WHERE "+getColumnNameOf_id()+" = " + QString::number(childId)).first()); \
     } \
     std::shared_ptr<ClassName> get##ClassName##AfterIncludes() const\
     { \
@@ -120,48 +125,48 @@
     } \
     bool remove##ClassName(qlonglong id) \
     { \
-        return ORMDatabase::adapter->setNull(#ClassName, QString("%1_id").arg(metaObject()->className()), \
-            QString("WHERE id = '%1'") \
+        return ORMDatabase::adapter->setNull(#ClassName, QString("%1_"+getColumnNameOf_id()).arg(getMapDBTableName()), \
+            QString("WHERE "+getColumnNameOf_id()+" = '%1'") \
                 .arg(id)); \
     }
 
   /*!
-     \def ORM_HAS_MANY(ClassName)
-     Declares HAS_MANY relation. Example:
-     \code
-     class Car : public ORMObject<Car>
-     {
-         ...
-     };
+	 \def ORM_HAS_MANY(ClassName)
+	 Declares HAS_MANY relation. Example:
+	 \code
+	 class Car : public ORMObject<Car>
+	 {
+		 ...
+	 };
 
-     class CarDriver : public ORMObject<CarDriver>
-     {
-         ...
-         ORM_HAS_ONE(DriverLicense)
-         ORM_HAS_MANY(Car)
+	 class CarDriver : public ORMObject<CarDriver>
+	 {
+		 ...
+		 ORM_HAS_ONE(DriverLicense)
+		 ORM_HAS_MANY(Car)
 
-      public:
-         CarDriver() {}
-     };
-     \endcode
-     Macros generate next methods:
+	  public:
+		 CarDriver() {}
+	 };
+	 \endcode
+	 Macros generate next methods:
 
-     <b> QList<\a std::shared_ptr<ClassName>> getAll\a ClassName() \n</b>
-     Returns all \a ClassName, associated with model or empty QList, if no such child object.
+	 <b> QList<\a std::shared_ptr<ClassName>> getAll\a ClassName() \n</b>
+	 Returns all \a ClassName, associated with model or empty QList, if no such child object.
 
-     <b>void add\a ClassName(const \a Classname &object) \n</b>
-     Assigns \a object with model.\n
-     \b NOTE: \a object must exists in table!
+	 <b>void add\a ClassName(const \a Classname &object) \n</b>
+	 Assigns \a object with model.\n
+	 \b NOTE: \a object must exists in table!
 
-     <b>\a std::shared_ptr<ClassName> create\a ClassName(const QHash<QString, QVariant> &values) \n</b>
-     Creates new \a ClassName object from QHash<fieldName, value> \a values and call save() method. After assigns \a object with model
-     and return pointer to it.
+	 <b>\a std::shared_ptr<ClassName> create\a ClassName(const QHash<QString, QVariant> &values) \n</b>
+	 Creates new \a ClassName object from QHash<fieldName, value> \a values and call save() method. After assigns \a object with model
+	 and return pointer to it.
 
-     <b>QList<\a std::shared_ptr<ClassName>> find<em>ClassName</em>Where(ORMWhere where, ORMGroupBy group = ORMGroupBy(), ORMOrderBy order = ORMOrderBy()) \n</b>
-     Find child objects appropriate given \a where and returns them in accordance with \a group and \a order.
+	 <b>QList<\a std::shared_ptr<ClassName>> find<em>ClassName</em>Where(ORMWhere where, ORMGroupBy group = ORMGroupBy(), ORMOrderBy order = ORMOrderBy()) \n</b>
+	 Find child objects appropriate given \a where and returns them in accordance with \a group and \a order.
 
-     <b>void get<em>ClassName</em>AfterIncludes() const \n </b>
-     Returns list of \a ClassName that be loaded by includes(..) method.
+	 <b>void get<em>ClassName</em>AfterIncludes() const \n </b>
+	 Returns list of \a ClassName that be loaded by includes(..) method.
 
    */
 
@@ -178,8 +183,8 @@
         QList<std::shared_ptr<ClassName>> result; \
         if(id < 0) \
             return result; \
-        QString whereString = QString("WHERE %1_id = %2") \
-                                .arg(metaObject()->className()) \
+        QString whereString = QString("WHERE %1_"+ QString(idColumnName) +" = %2") \
+                                .arg(getMapDBTableName()) \
                                 .arg(id); \
         QList<QSqlRecord> list = ORMDatabase::adapter->find( #ClassName, "*", whereString + " " + group.getGroupString() + \
                                                             " " + order.getOrderString()); \
@@ -193,24 +198,24 @@
         if(childId < 0 || id < 0) \
             return; \
         QHash<QString, QVariant> hash; \
-        hash.insert(QString("%1_id").arg(metaObject()->className()), QString::number(id)); \
+        hash.insert(QString("%1_"+getColumnNameOf_id()).arg(getMapDBTableName()), QString::number(id)); \
         ORMDatabase::adapter->updateRecord(#ClassName, childId, hash); \
     } \
     std::shared_ptr<ClassName> create##ClassName(QHash<QString, QVariant> &values) \
     { \
         if(id < 0) \
             return 0; \
-        values.insert(QString("%1_id").arg(metaObject()->className()), QString::number(id)); \
+        values.insert(QString("%1_"+getColumnNameOf_id()).arg(getMapDBTableName()), QString::number(id)); \
         int childId = ORMDatabase::adapter->addRecord(#ClassName, values); \
-        return translateRecToObj<ClassName>(ORMDatabase::adapter->find(#ClassName, "*", "WHERE id = " + QString::number(childId)).first()); \
+        return translateRecToObj<ClassName>(ORMDatabase::adapter->find(#ClassName, "*", "WHERE "+getColumnNameOf_id()+" = " + QString::number(childId)).first()); \
     } \
     QList<std::shared_ptr<ClassName>> find##ClassName##Where(ORMWhere where, ORMGroupBy group = ORMGroupBy(), ORMOrderBy order = ORMOrderBy()) \
     { \
         QList<std::shared_ptr<ClassName>> result; \
         if(id < 0) \
             return result; \
-        QString whereString = QString("WHERE %1_id = %2") \
-                                .arg(metaObject()->className()) \
+        QString whereString = QString("WHERE %1_"+getColumnNameOf_id()+" = %2") \
+                                .arg(getMapDBTableName()) \
                                 .arg(id); \
         whereString += " AND " + where.getWhereString().remove(0, 6); \
         QList<QSqlRecord> list = ORMDatabase::adapter->find( #ClassName, "*",whereString + " " + group.getGroupString() + \
@@ -229,14 +234,14 @@
     } \
     bool remove##ClassName(qlonglong id) \
     { \
-        return ORMDatabase::adapter->setNull(#ClassName, QString("%1_id").arg(metaObject()->className()), \
-            QString("WHERE id = '%1'") \
+        return ORMDatabase::adapter->setNull(#ClassName, QString("%1_"+getColumnNameOf_id()).arg(getMapDBTableName()), \
+            QString("WHERE "+getColumnNameOf_id()+" = '%1'") \
                 .arg(id)); \
     } \
     bool removeAll##ClassName() \
     { \
-        return ORMDatabase::adapter->setNull(#ClassName, QString("%1_id").arg(metaObject()->className()), \
-            QString("WHERE %1_id = '%2'") \
-                .arg(metaObject()->className()) \
+        return ORMDatabase::adapter->setNull(#ClassName, QString("%1_"+getColumnNameOf_id()).arg(getMapDBTableName()), \
+            QString("WHERE %1_"+getColumnNameOf_id()+" = '%2'") \
+                .arg(getMapDBTableName()) \
                 .arg(id)); \
     }

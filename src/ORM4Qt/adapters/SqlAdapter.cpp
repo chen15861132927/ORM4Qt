@@ -15,13 +15,13 @@ bool SqlAdapter::createDatabase(const QString &name)
 bool SqlAdapter::createTable(const QString &tableName, const QHash<QString, QString> &info)
 {
     QString name;
-    m_lastQuery = QString("CREATE TABLE %1(id BIGINT, ")
+    m_lastQuery = QString("CREATE TABLE %1("+ QString(idColumnName) +" BIGINT, ")
             .arg(tableName);
     foreach(name, info.keys())
         m_lastQuery += QString("%1 %2, ")
                 .arg(name)
                 .arg(m_tableTypes.value(info.value(name)));
-    m_lastQuery += "PRIMARY KEY (id));";
+    m_lastQuery += "PRIMARY KEY (" + QString(idColumnName) + "));";
     return m_logger.exec(m_query, m_lastQuery);
     //return m_query.exec(m_lastQuery);
 }
@@ -29,7 +29,7 @@ bool SqlAdapter::createTable(const QString &tableName, const QHash<QString, QStr
 bool SqlAdapter::createTableRelations(const QString &parent, Relation rel, const QString &child)
 {
     if(rel == HasOne || rel == HasMany)
-        m_lastQuery = QString("ALTER TABLE %1 ADD %2_id INTEGER;")
+        m_lastQuery = QString("ALTER TABLE %1 ADD %2_" + QString(idColumnName) + " INTEGER;")
                 .arg(child)
                 .arg(parent);
     return m_logger.exec(m_query, m_lastQuery);
@@ -91,7 +91,7 @@ bool SqlAdapter::updateRecord(const QString &tableName, const qlonglong id, cons
                     .arg(fieldName)
                     .arg(info.value(fieldName).toString());
     m_lastQuery.resize(m_lastQuery.size() - 2);
-    m_lastQuery += QString(" WHERE id = %1;")
+    m_lastQuery += QString(" WHERE " + QString(idColumnName) + " = %1;")
             .arg(id);
     return m_logger.exec(m_query, m_lastQuery);
     //return m_query.exec(m_lastQuery);
@@ -112,7 +112,7 @@ QList<QSqlRecord> SqlAdapter::find(const QString &tableName, const QString &fiel
 
 QSqlRecord SqlAdapter::first(const QString &tableName)
 {
-    m_lastQuery = QString("SELECT * FROM %1 ORDER BY id ASC LIMIT 1;")
+    m_lastQuery = QString("SELECT * FROM %1 ORDER BY " + QString(idColumnName) + " ASC LIMIT 1;")
             .arg(tableName);
     m_logger.exec(m_query, m_lastQuery);
     //m_query.exec(m_lastQuery);
@@ -122,7 +122,7 @@ QSqlRecord SqlAdapter::first(const QString &tableName)
 
 QSqlRecord SqlAdapter::last(const QString &tableName)
 {
-    m_lastQuery = QString("SELECT * FROM %1 ORDER BY id DESC LIMIT 1;")
+    m_lastQuery = QString("SELECT * FROM %1 ORDER BY " + QString(idColumnName) + " DESC LIMIT 1;")
             .arg(tableName);
     m_logger.exec(m_query, m_lastQuery);
     //m_query.exec(m_lastQuery;)
@@ -214,10 +214,10 @@ QHash<QString, QList<QSqlRecord> > SqlAdapter::includes(const QString &parentMod
     QList<QSqlRecord> generalList = find(parentModel, "*", params);
     QHash<QString, QList<QSqlRecord> > result;
     result.insert(parentModel, generalList);
-    QString whereForChildren = QString("WHERE %1_id IN (")
+    QString whereForChildren = QString("WHERE %1_" + QString(idColumnName) + " IN (")
             .arg(parentModel);
     for(int i = 0; i < generalList.size(); i++)
-        whereForChildren += generalList.value(i).field("id").value().toString() + ", ";
+        whereForChildren += generalList.value(i).field(idColumnName).value().toString() + ", ";
     whereForChildren.resize(whereForChildren.size() - 2);
     whereForChildren += ')';
     for(int i = 0; i < childModels.size(); i++)

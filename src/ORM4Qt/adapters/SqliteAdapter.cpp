@@ -8,7 +8,7 @@ SqliteAdapter::SqliteAdapter()
 bool SqliteAdapter::createTable(const QString &tableName, const QHash<QString, QString> &info)
 {
     QString name;
-    m_lastQuery = QString("CREATE TABLE %1(id INTEGER PRIMARY KEY, ")
+    m_lastQuery = QString("CREATE TABLE %1(" + QString(idColumnName) + " INTEGER PRIMARY KEY, ")
             .arg(tableName);
     foreach(name, info.keys())
         m_lastQuery += QString("%1 %2, ")

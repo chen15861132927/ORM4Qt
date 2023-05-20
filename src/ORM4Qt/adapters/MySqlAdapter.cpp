@@ -18,13 +18,13 @@ bool MySqlAdapter::createDatabase(const QString &name)
 bool MySqlAdapter::createTable(const QString &tableName, const QHash<QString, QString> &info)
 {
     QString name;
-    m_lastQuery = QString("CREATE TABLE %1(id BIGINT AUTO_INCREMENT, ")
+    m_lastQuery = QString("CREATE TABLE %1( "+ QString(idColumnName) +" BIGINT AUTO_INCREMENT, ")
             .arg(tableName);
     foreach(name, info.keys())
         m_lastQuery += QString("%1 %2, ")
                 .arg(name)
                 .arg(m_tableTypes.value(info.value(name)));
-    m_lastQuery += "PRIMARY KEY (id));";
+    m_lastQuery += "PRIMARY KEY ("+ QString(idColumnName) +"));";
     m_query.clear();
     return m_query.exec(m_lastQuery);
 }
@@ -32,12 +32,12 @@ bool MySqlAdapter::createTable(const QString &tableName, const QHash<QString, QS
 bool MySqlAdapter::createTableRelations(const QString &parent, ORMAbstractAdapter::Relation rel, const QString &child)
 {
     if(rel == HasMany)
-        m_lastQuery = QString("ALTER TABLE %1 ADD %2_id BIGINT AFTER id, ADD FOREIGN KEY(%2_id) REFERENCES %2(id);")
+        m_lastQuery = QString("ALTER TABLE %1 ADD %2_"+ QString(idColumnName) +" BIGINT AFTER "+ QString(idColumnName) +", ADD FOREIGN KEY(%2_"+ QString(idColumnName) +") REFERENCES %2("+ QString(idColumnName) +");")
                 .arg(child)
                 .arg(parent);
     else if(rel == HasOne)
-        m_lastQuery = QString("ALTER TABLE %1 ADD %2_id BIGINT AFTER id, ADD FOREIGN KEY(%2_id) REFERENCES %2(id),"
-                              "ADD UNIQUE(%2_id);")
+        m_lastQuery = QString("ALTER TABLE %1 ADD %2_"+ QString(idColumnName) +" BIGINT AFTER "+ QString(idColumnName) +", ADD FOREIGN KEY(%2_"+ QString(idColumnName) +") REFERENCES %2("+ QString(idColumnName) +"),"
+                              "ADD UNIQUE(%2_"+ QString(idColumnName) +");")
                 .arg(child)
                 .arg(parent);
     return m_query.exec(m_lastQuery);

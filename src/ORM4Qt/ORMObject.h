@@ -27,6 +27,7 @@
    \endcode
  */
 
+
 template<class ModelName>
 class ORMObject : public QObject
 {
@@ -49,7 +50,7 @@ public:
 		QHash<QString, QString> info; //QHash<name, type>
 		for (int i = 1; i < metaObject()->propertyCount(); i++)
 			info.insert(metaObject()->property(i).name(), metaObject()->property(i).typeName());
-		return ORMDatabase::adapter->createTable(metaObject()->className(), info);
+		return ORMDatabase::adapter->createTable(getMapDBTableName(), info);
 	}
 	/*!
 	   Creates table relation \a rel to child model \a childModelName.
@@ -58,7 +59,7 @@ public:
 	 */
 	bool createTableRelation(ORMAbstractAdapter::Relation rel, QString childModelName) const
 	{
-		return ORMDatabase::adapter->createTableRelations(metaObject()->className(), rel, childModelName);
+		return ORMDatabase::adapter->createTableRelations(getMapDBTableName(), rel, childModelName);
 	}
 	/*!
 	   Deletes table associated with model.
@@ -67,7 +68,7 @@ public:
 	 */
 	bool dropTable() const
 	{
-		return ORMDatabase::adapter->dropTable(metaObject()->className());
+		return ORMDatabase::adapter->dropTable(getMapDBTableName());
 	}
 	/*!
 	   Sets new id.
@@ -100,7 +101,7 @@ public:
 		QHash<QString, QVariant> info;
 		for (int i = 0; i < m_propertiesForUpdate.size(); i++)
 			info.insert(m_propertiesForUpdate.value(i), property(qPrintable(m_propertiesForUpdate.value(i))));
-		id = ORMDatabase::adapter->addRecord(metaObject()->className(), info);
+		id = ORMDatabase::adapter->addRecord(getMapDBTableName(), info);
 		if (id >= 0)
 		{
 			m_propertiesForUpdate.clear();
@@ -122,7 +123,7 @@ public:
 		QHash<QString, QVariant> info;
 		for (int i = 0; i < m_propertiesForUpdate.size(); i++)
 			info.insert(m_propertiesForUpdate.value(i), property(qPrintable(m_propertiesForUpdate.value(i))));
-		if (ORMDatabase::adapter->updateRecord(metaObject()->className(), id, info))
+		if (ORMDatabase::adapter->updateRecord(getMapDBTableName(), id, info))
 		{
 			m_propertiesForUpdate.clear();
 			m_hasUnsavedChanges = false;
@@ -139,7 +140,7 @@ public:
 	std::shared_ptr<ModelName> find(qlonglong id)
 	{
 		QList<QSqlRecord> list;
-		list = ORMDatabase::adapter->find(metaObject()->className(), "*", ORMWhere("id", ORMWhere::Equals, id).getWhereString());
+		list = ORMDatabase::adapter->find(getMapDBTableName(), "*", ORMWhere(getColumnNameOf_id(), ORMWhere::Equals, id).getWhereString());
 		if (list.isEmpty())
 			return 0;
 		else
@@ -152,7 +153,7 @@ public:
 	 */
 	QList<std::shared_ptr<ModelName>> findAll(ORMGroupBy group = ORMGroupBy(), ORMOrderBy order = ORMOrderBy())
 	{
-		QList<QSqlRecord> list = ORMDatabase::adapter->find(metaObject()->className(), "*", group.getGroupString() + " " + order.getOrderString());
+		QList<QSqlRecord> list = ORMDatabase::adapter->find(getMapDBTableName(), "*", group.getGroupString() + " " + order.getOrderString());
 		QList<std::shared_ptr<ModelName>> returnList;
 		for (int i = 0; i < list.size(); i++)
 			returnList.append(translateRecToObj<ModelName>(list.value(i)));
@@ -165,8 +166,8 @@ public:
 	 */
 	std::shared_ptr<ModelName> first()
 	{
-		QSqlRecord record = ORMDatabase::adapter->first(metaObject()->className());
-		if (record.isNull("id"))
+		QSqlRecord record = ORMDatabase::adapter->first(getMapDBTableName());
+		if (record.isNull(getColumnNameOf_id()))
 			return 0;
 		else
 			return translateRecToObj<ModelName>(record);
@@ -178,8 +179,8 @@ public:
 	 */
 	std::shared_ptr<ModelName> last()
 	{
-		QSqlRecord record = ORMDatabase::adapter->last(metaObject()->className());
-		if (record.isNull("id"))
+		QSqlRecord record = ORMDatabase::adapter->last(getMapDBTableName());
+		if (record.isNull(getColumnNameOf_id()))
 			return 0;
 		else
 			return translateRecToObj<ModelName>(record);
@@ -191,7 +192,7 @@ public:
 	 */
 	QList<std::shared_ptr<ModelName>> findBy(const QString fieldName, const QVariant value, ORMGroupBy group = ORMGroupBy(), ORMOrderBy order = ORMOrderBy())
 	{
-		QList<QSqlRecord> list = ORMDatabase::adapter->find(metaObject()->className(), "*",
+		QList<QSqlRecord> list = ORMDatabase::adapter->find(getMapDBTableName(), "*",
 															ORMWhere(fieldName, ORMWhere::Equals, value).getWhereString() + " " +
 															group.getGroupString() + " " + order.getOrderString());
 		QList<std::shared_ptr<ModelName>> returnList;
@@ -216,7 +217,7 @@ public:
 			.arg(fieldName)
 			.arg(value.toString());
 		whereString.resize(whereString.size() - 4);
-		QList<QSqlRecord> list = ORMDatabase::adapter->find(metaObject()->className(), "*", whereString + " " + group.getGroupString() + " " +
+		QList<QSqlRecord> list = ORMDatabase::adapter->find(getMapDBTableName(), "*", whereString + " " + group.getGroupString() + " " +
 															order.getOrderString());
 		for (int i = 0; i < list.size(); i++)
 			returnList.append(translateRecToObj<ModelName>(list.value(i)));
@@ -240,7 +241,7 @@ public:
 			.arg(key)
 			.arg(params.value(key).toString());
 		whereString.resize(whereString.size() - 4);
-		QList<QSqlRecord> list = ORMDatabase::adapter->find(metaObject()->className(), "*", whereString);
+		QList<QSqlRecord> list = ORMDatabase::adapter->find(getMapDBTableName(), "*", whereString);
 		for (int i = 0; i < list.size(); i++)
 			returnList.append(translateRecToObj<ModelName>(list.value(i)));
 		return returnList;
@@ -260,7 +261,7 @@ public:
 	 */
 	QList<std::shared_ptr<ModelName>> where(ORMWhere condition, ORMGroupBy group = ORMGroupBy(), ORMOrderBy order = ORMOrderBy())
 	{
-		QList<QSqlRecord> list = ORMDatabase::adapter->find(metaObject()->className(), "*", condition.getWhereString() + " " + group.getGroupString() + " " +
+		QList<QSqlRecord> list = ORMDatabase::adapter->find(getMapDBTableName(), "*", condition.getWhereString() + " " + group.getGroupString() + " " +
 															order.getOrderString());
 		QList<std::shared_ptr<ModelName>> returnList;
 		for (int i = 0; i < list.size(); i++)
@@ -272,14 +273,14 @@ public:
 	 */
 	bool exists()
 	{
-		return !ORMDatabase::adapter->find(metaObject()->className(), "*", "").isEmpty();
+		return !ORMDatabase::adapter->find(getMapDBTableName(), "*", "").isEmpty();
 	}
 	/*!
 	   Returns true if object with given \a id exist, otherwise return false.
 	 */
 	bool exists(qlonglong id)
 	{
-		return !ORMDatabase::adapter->find(metaObject()->className(), "*", ORMWhere("id", ORMWhere::Equals, id).getWhereString()).isEmpty();
+		return !ORMDatabase::adapter->find(getMapDBTableName(), "*", ORMWhere(getColumnNameOf_id(), ORMWhere::Equals, id).getWhereString()).isEmpty();
 	}
 	/*!
 	   Verification existence of objects with specified conditions.
@@ -288,7 +289,7 @@ public:
 	 */
 	bool exists(ORMWhere condition)
 	{
-		return !ORMDatabase::adapter->find(metaObject()->className(), "*", condition.getWhereString()).isEmpty();
+		return !ORMDatabase::adapter->find(getMapDBTableName(), "*", condition.getWhereString()).isEmpty();
 	}
 	/*!
 	   Immediately updates object field in table.
@@ -301,7 +302,7 @@ public:
 			return false;
 		QHash<QString, QVariant> info;
 		info.insert(fieldName, value);
-		if (ORMDatabase::adapter->updateRecord(metaObject()->className(), id, info))
+		if (ORMDatabase::adapter->updateRecord(getMapDBTableName(), id, info))
 		{
 			setProperty(qPrintable(fieldName), value);
 			m_propertiesForUpdate.removeAt(m_propertiesForUpdate.indexOf(fieldName));
@@ -317,7 +318,7 @@ public:
 	 */
 	bool remove()
 	{
-		if (ORMDatabase::adapter->remove(metaObject()->className(), ORMWhere("id", ORMWhere::Equals, id).getWhereString()))
+		if (ORMDatabase::adapter->remove(getMapDBTableName(), ORMWhere(getColumnNameOf_id(), ORMWhere::Equals, id).getWhereString()))
 		{
 			id = -1;
 			return true;
@@ -332,7 +333,7 @@ public:
 	 */
 	bool removeBy(ORMWhere condition)
 	{
-		return ORMDatabase::adapter->remove(metaObject()->className(), condition.getWhereString());
+		return ORMDatabase::adapter->remove(getMapDBTableName(), condition.getWhereString());
 	}
 	/*!
 	   Removes all records from table.
@@ -341,35 +342,35 @@ public:
 	 */
 	bool removeAll() const
 	{
-		return ORMDatabase::adapter->remove(metaObject()->className(), "");
+		return ORMDatabase::adapter->remove(getMapDBTableName(), "");
 	}
 	/*!
 	   Returns number of objects in table.
 	 */
 	qlonglong count() const
 	{
-		return ORMDatabase::adapter->count(metaObject()->className(), "*");
+		return ORMDatabase::adapter->count(getMapDBTableName(), "*");
 	}
 	/*!
 	   Returns number of not null fields with given \a fieldName column.
 	 */
 	qlonglong count(QString fieldName) const
 	{
-		return ORMDatabase::adapter->count(metaObject()->className(), fieldName);
+		return ORMDatabase::adapter->count(getMapDBTableName(), fieldName);
 	}
 	/*!
 	   Returns number of objects that match \a condition.
 	 */
 	qlonglong count(ORMWhere condition) const
 	{
-		return ORMDatabase::adapter->countBy(metaObject()->className(), condition.getWhereString());
+		return ORMDatabase::adapter->countBy(getMapDBTableName(), condition.getWhereString());
 	}
 	/*!
 	   Returns average value from given \a fieldName column that match \a condition.
 	 */
 	double average(QString fieldName, ORMWhere condition = ORMWhere()) const
 	{
-		return ORMDatabase::adapter->calculation(ORMAbstractAdapter::Average, metaObject()->className(),
+		return ORMDatabase::adapter->calculation(ORMAbstractAdapter::Average, getMapDBTableName(),
 												 fieldName, condition.getWhereString());
 	}
 	/*!
@@ -377,7 +378,7 @@ public:
 	 */
 	double maximum(QString fieldName, ORMWhere condition = ORMWhere()) const
 	{
-		return ORMDatabase::adapter->calculation(ORMAbstractAdapter::Maximum, metaObject()->className(),
+		return ORMDatabase::adapter->calculation(ORMAbstractAdapter::Maximum, getMapDBTableName(),
 												 fieldName, condition.getWhereString());
 	}
 	/*!
@@ -385,7 +386,7 @@ public:
 	 */
 	double minimum(QString fieldName, ORMWhere condition = ORMWhere()) const
 	{
-		return ORMDatabase::adapter->calculation(ORMAbstractAdapter::Minimum, metaObject()->className(),
+		return ORMDatabase::adapter->calculation(ORMAbstractAdapter::Minimum, getMapDBTableName(),
 												 fieldName, condition.getWhereString());
 	}
 	/*!
@@ -393,7 +394,7 @@ public:
 	 */
 	double sum(QString fieldName, ORMWhere condition = ORMWhere()) const
 	{
-		return ORMDatabase::adapter->calculation(ORMAbstractAdapter::Sum, metaObject()->className(),
+		return ORMDatabase::adapter->calculation(ORMAbstractAdapter::Sum, getMapDBTableName(),
 												 fieldName, condition.getWhereString());
 	}
 	/*!
@@ -405,17 +406,17 @@ public:
 	 */
 	QList<std::shared_ptr<ModelName>> includes(const QStringList& list, ORMWhere condition = ORMWhere())
 	{
-		QHash<QString, QList<QSqlRecord> > hash = ORMDatabase::adapter->includes(metaObject()->className(), list,
+		QHash<QString, QList<QSqlRecord> > hash = ORMDatabase::adapter->includes(getMapDBTableName(), list,
 																				 condition.getWhereString());
 		QHash<int, int> idIndexHash;
 		QList<std::shared_ptr<ModelName>> result;
-		QList<QSqlRecord> currentList = hash.take(metaObject()->className());
+		QList<QSqlRecord> currentList = hash.take(getMapDBTableName());
 		QString currentModelName;
-		QString fieldName = QString("%1_id").arg(metaObject()->className());
+		QString fieldName = (QString("%1_")+ getColumnNameOf_id()).arg(getMapDBTableName());
 		for (int i = 0; i < currentList.size(); i++)
 		{
 			result.append(translateRecToObj<ModelName>(currentList.value(i)));
-			idIndexHash.insert(currentList.value(i).field("id").value().toInt(), i);
+			idIndexHash.insert(currentList.value(i).field(getColumnNameOf_id()).value().toInt(), i);
 		}
 		foreach(currentModelName, hash.keys())
 		{
@@ -424,7 +425,7 @@ public:
 			currentList = hash.take(currentModelName);
 			for (int i = 0; i < currentList.size(); i++)
 			{
-				auto itemindex=idIndexHash.value(currentList.value(i).field(fieldName).value().toInt());
+				auto itemindex = idIndexHash.value(currentList.value(i).field(fieldName).value().toInt());
 				QMetaObject::invokeMethod(result.value(itemindex).get(),
 										  qPrintable(methodName), Q_ARG(QSqlRecord, currentList.value(i)));
 			}
@@ -438,7 +439,7 @@ public:
 	 */
 	QList<QVariant> pluck(QString fieldName, ORMWhere condition = ORMWhere(), ORMGroupBy group = ORMGroupBy())
 	{
-		QList<QSqlRecord> list = ORMDatabase::adapter->find(metaObject()->className(), fieldName, condition.getWhereString() + " "
+		QList<QSqlRecord> list = ORMDatabase::adapter->find(getMapDBTableName(), fieldName, condition.getWhereString() + " "
 															+ group.getGroupString());
 		QList<QVariant> result;
 		for (int i = 0; i < list.size(); i++)
@@ -448,9 +449,9 @@ public:
 	QString toString()
 	{
 		QString str;
-		str += metaObject()->className();
+		str += getMapDBTableName();
 		str += '\n';
-		str.append("    id : " + QString::number(id) + '\n');
+		str.append("    "+ getColumnNameOf_id() +" : " + QString::number(id) + '\n');
 		for (int i = 1; i < metaObject()->propertyCount(); i++)
 			str.append(QString("    ") + metaObject()->property(i).name() +
 					   QString(" : ") + property(metaObject()->property(i).name()).toString() + '\n');
@@ -461,6 +462,25 @@ public:
 		m_propertiesForUpdate.clear();
 		m_hasUnsavedChanges = false;
 	}
+	void setMapDBTableName(QString mapDBTableName)
+	{
+		isSettingTableNameBySelf = true;
+		m_mapDBTableName = mapDBTableName;
+	}
+
+	const QString& getMapDBTableName()const
+	{
+		if (!isSettingTableNameBySelf)
+		{
+			m_mapDBTableName = metaObject()->className();
+		}
+		return m_mapDBTableName;
+	}
+	const QString& getColumnNameOf_id() const
+	{
+		return m_idColumnName;
+	}
+	
 
 protected:
 	qlonglong id;
@@ -474,38 +494,22 @@ protected:
 		for (int i = 1; i < result->metaObject()->propertyCount(); i++)
 		{
 			currentFieldName = QString(result->metaObject()->property(i).name());
-			QMetaProperty itemProperty= result->metaObject()->property(i);
+			QMetaProperty itemProperty = result->metaObject()->property(i);
 			if (record.contains(currentFieldName))
 				itemProperty.write(result.get(), record.value(currentFieldName));
 			else if (record.contains(currentFieldName.toLower()))
 				itemProperty.write(result.get(), record.value(currentFieldName.toLower()));
 		}
-		result->setId(record.value("id").toInt());
+		result->setId(record.value(result->getColumnNameOf_id()).toInt());
 		result->clearUpdateList();
 		return result;
 	}
+
+
+private:
+	mutable QString m_mapDBTableName = "";
+
+	bool isSettingTableNameBySelf = false;
+
+	QString m_idColumnName = idColumnName;
 };
-
-/*!
-   \relates ORMObject
-   Function takes list of models, create "WHERE" expression with model's ids and call QSqlTableModel::setFilter() method.
-
-   Returns created QSqlTableModel.
- */
-template<class T>
-std::shared_ptr<QSqlRelationalTableModel> listToQtModel(const QList<std::shared_ptr<T>>& list)
-{
-	QString filter = "id IN(";
-	for (int i = 0; i < list.size(); i++)
-		filter += QString("%1, ")
-		.arg(list.value(i)->getId());
-	filter.resize(filter.size() - 2);
-	filter += ')';
-	std::shared_ptr<QSqlRelationalTableModel> model = std::make_shared<QSqlRelationalTableModel>();
-	model->setTable(T::staticMetaObject.className());
-	model->setFilter(filter);
-	model->select();
-	return model;
-}
-
-

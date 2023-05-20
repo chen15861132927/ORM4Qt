@@ -3,16 +3,19 @@
 #include "../ORM_Model/ORM_Model.h"
 #include "qdebug.h"
 QString dbName = "Test_ORMDatabase";
-
+QString driverName = "QMYSQL";
+QString userName = "root";
+QString hostName = "localhost";
+QString password = "123456";
 TEST(UnitTest_MySQL, test_createTable)
 {
 	//EXPECT_EQ(1, 1);
 	//EXPECT_TRUE(true);
 
-	auto db = ORMDatabase::addORMDatabase("QMYSQL");
-	db.setUserName("root");
-	db.setHostName("localhost");
-	db.setPassword("123456");
+	auto db = ORMDatabase::addORMDatabase(driverName);
+	db.setUserName(userName);
+	db.setHostName(hostName);
+	db.setPassword(password);
 
 	//Test open
 	if (!db.open())
@@ -27,26 +30,33 @@ TEST(UnitTest_MySQL, test_createTable)
 
 		auto res = db.createDatabase(dbName);
 		ORM_Model model;
-
-		EXPECT_TRUE(model.createTable());
+ 
 
 		CarDriver driver;
 		DriverLicense license;
 		Car car;
+		/*
+		TODO : verify table Name can be modify.
+		model.setMapDBTableName(model.metaObject()->className() + QString("TBName"));
+		driver.setMapDBTableName(driver.metaObject()->className() + QString("TBName"));
+		license.setMapDBTableName(license.metaObject()->className() + QString("TBName"));
+		car.setMapDBTableName(car.metaObject()->className() + QString("TBName"));*/
+
+		EXPECT_TRUE(model.createTable());
 		EXPECT_EQ(driver.createTable(), true);
 		EXPECT_EQ(license.createTable(), true);
 		EXPECT_EQ(car.createTable(), true);
-		EXPECT_EQ(driver.createTableRelation(ORMAbstractAdapter::HasOne, "DriverLicense"), true);
-		EXPECT_EQ(driver.createTableRelation(ORMAbstractAdapter::HasMany, "Car"), true);
+		EXPECT_EQ(driver.createTableRelation(ORMAbstractAdapter::HasOne, license.getMapDBTableName()), true);
+		EXPECT_EQ(driver.createTableRelation(ORMAbstractAdapter::HasMany, car.getMapDBTableName()), true);
 	}
 }
 
 TEST(UnitTest_MySQL, test_save)
 {
-	auto db = ORMDatabase::addORMDatabase("QMYSQL");
-	db.setUserName("root");
-	db.setHostName("localhost");
-	db.setPassword("123456");
+	auto db = ORMDatabase::addORMDatabase(driverName);
+	db.setUserName(userName);
+	db.setHostName(hostName);
+	db.setPassword(password);
 
 	//Test open
 	if (!db.open())
@@ -61,6 +71,8 @@ TEST(UnitTest_MySQL, test_save)
 		db.exec("DELETE FROM ORM_Model;");
 		QTime time = QTime::currentTime();
 		ORM_Model model;
+		/*model.setMapDBTableName(model.metaObject()->className() + QString("TBName"));
+		*/
 		model.setnameBool(true);
 		model.setnameBlob(QByteArray(10000, '1'));
 		model.setnameChar('A');
@@ -77,19 +89,21 @@ TEST(UnitTest_MySQL, test_save)
 		QSqlQuery query = db.exec("SELECT * FROM ORM_Model;");
 		query.next();
 		for (int i = 0; i < query.size(); i++)
-			if (query.record().fieldName(i) != "id")
+		{
+			if (query.record().fieldName(i) != model.getColumnNameOf_id())
 				EXPECT_EQ(query.value(i), model.property(query.record().fieldName(i).toLocal8Bit().constData()));
 			else
 				EXPECT_EQ(query.value(i).toInt(), model.getId());
+		}
 	}
 }
 
 TEST(UnitTest_MySQL, test_ORM_HAS_ONE)
 {
-	auto db = ORMDatabase::addORMDatabase("QMYSQL");
-	db.setUserName("root");
-	db.setHostName("localhost");
-	db.setPassword("123456");
+	auto db = ORMDatabase::addORMDatabase(driverName);
+	db.setUserName(userName);
+	db.setHostName(hostName);
+	db.setPassword(password);
 
 	//Test open
 	if (!db.open())
@@ -110,13 +124,17 @@ TEST(UnitTest_MySQL, test_ORM_HAS_ONE)
 
 		CarDriver driver1, driver2;
 		DriverLicense license;
+		/*driver1.setMapDBTableName(driver1.metaObject()->className() + QString("TBName"));
+		driver2.setMapDBTableName(driver2.metaObject()->className() + QString("TBName"));
+		license.setMapDBTableName(license.metaObject()->className() + QString("TBName"));*/
+
 		std::shared_ptr<DriverLicense> pointer;
 		driver1.removeAll();
 		license.removeAll();
 		driver1.setName("Alex");
 		driver2.setName("Paul");
-		driver1.save();
-		driver2.save();
+		EXPECT_TRUE(driver1.save());
+		EXPECT_TRUE(driver2.save());
 		EXPECT_TRUE(driver1.getDriverLicense() == 0);
 		QHash<QString, QVariant> info;
 		info.insert("Number", 123);
@@ -138,10 +156,10 @@ TEST(UnitTest_MySQL, test_ORM_HAS_ONE)
 
 TEST(UnitTest_MySQL, test_ORM_HAS_MANY)
 {
-	auto db = ORMDatabase::addORMDatabase("QMYSQL");
-	db.setUserName("root");
-	db.setHostName("localhost");
-	db.setPassword("123456");
+	auto db = ORMDatabase::addORMDatabase(driverName);
+	db.setUserName(userName);
+	db.setHostName(hostName);
+	db.setPassword(password);
 
 	//Test open
 	if (!db.open())
@@ -162,6 +180,12 @@ TEST(UnitTest_MySQL, test_ORM_HAS_MANY)
 
 		CarDriver driver1, driver2;
 		Car car1, car2, car3;
+		/*driver1.setMapDBTableName(driver1.metaObject()->className() + QString("TBName"));
+		driver2.setMapDBTableName(driver2.metaObject()->className() + QString("TBName"));
+		car1.setMapDBTableName(car1.metaObject()->className() + QString("TBName"));
+		car2.setMapDBTableName(car2.metaObject()->className() + QString("TBName"));
+		car3.setMapDBTableName(car3.metaObject()->className() + QString("TBName"));*/
+
 		std::shared_ptr<Car> pointer;
 		driver1.removeAll();
 		car1.removeAll();
@@ -224,5 +248,141 @@ TEST(UnitTest_MySQL, test_ORM_HAS_MANY)
 		EXPECT_EQ(list5.size(), 2);
 
 		EXPECT_EQ(car1.exists(car1.getId()), false);
+	}
+}
+
+TEST(UnitTest_MySQL, test_includes)
+{
+	auto db = ORMDatabase::addORMDatabase(driverName);
+	db.setUserName(userName);
+	db.setHostName(hostName);
+	db.setPassword(password);
+
+	//Test open
+	if (!db.open())
+	{
+		QString temp = db.lastError().text();
+		qDebug() << "open fail" << "connect to mysql error" << temp;
+		EXPECT_TRUE(false);
+	}
+	else
+	{
+		((MySqlAdapter*)ORMDatabase::adapter)->initDB(dbName);
+		db.exec("DELETE FROM Car;");
+		std::cout << "Warning: " << db.lastError().text().toStdString() << endl;
+		db.exec("DELETE FROM DriverLicense;");
+
+		db.exec("DELETE FROM CarDriver;");
+		std::cout << "Warning: " << db.lastError().text().toStdString() << endl;
+
+		Car car1, car2, car3;
+		DriverLicense license1, license2;
+		CarDriver driver1, driver2;
+		/*license1.setMapDBTableName(driver1.metaObject()->className() + QString("TBName"));
+		license2.setMapDBTableName(driver2.metaObject()->className() + QString("TBName"));
+		driver1.setMapDBTableName(driver1.metaObject()->className() + QString("TBName"));
+		driver2.setMapDBTableName(driver2.metaObject()->className() + QString("TBName"));
+		car1.setMapDBTableName(car1.metaObject()->className() + QString("TBName"));
+		car2.setMapDBTableName(car2.metaObject()->className() + QString("TBName"));
+		car3.setMapDBTableName(car3.metaObject()->className() + QString("TBName"));*/
+		car1.removeAll();
+		license1.removeAll();
+		driver1.removeAll();
+		driver1.setName("Peter");
+		driver2.setName("Paul");
+		car1.setNumber("1");
+		car2.setNumber("2");
+		car3.setNumber("3");
+		license1.setNumber(123);
+		license2.setNumber(456);
+		driver1.save();
+		driver2.save();
+		car1.save();
+		car2.save();
+		car3.save();
+		license1.save();
+		license2.save();
+		driver1.setDriverLicense(license1.getId());
+		driver2.setDriverLicense(license2.getId());
+		driver1.addCar(car1.getId());
+		driver2.addCar(car2.getId());
+		driver2.addCar(car3.getId());
+		QStringList models;
+		models << license1.getMapDBTableName() << car1.getMapDBTableName();
+		auto list = driver1.includes(models);
+		EXPECT_EQ(list.size(), 2);
+		EXPECT_EQ(list.value(0)->getCarAfterIncludes().size(), 1);
+		EXPECT_EQ(list.value(0)->getName(), QString("Peter"));
+		EXPECT_EQ(list.value(1)->getName(), QString("Paul"));
+		EXPECT_EQ(list.value(0)->getCarAfterIncludes().first()->getNumber(), QString("1"));
+		EXPECT_EQ(list.value(1)->getCarAfterIncludes().size(), 2);
+		EXPECT_EQ(list.value(1)->getCarAfterIncludes().first()->getNumber(), QString("2"));
+		EXPECT_EQ(list.value(1)->getCarAfterIncludes().value(1)->getNumber(), QString("3"));
+		EXPECT_EQ(list.first()->getDriverLicense()->getNumber(), 123);
+		EXPECT_EQ(list.value(1)->getDriverLicense()->getNumber(), 456);
+		car1.remove();
+		car2.remove();
+
+		auto list2 = driver1.includes(models);
+		EXPECT_EQ(list2.first()->getCarAfterIncludes().size(), 0);
+		EXPECT_EQ(list2.value(1)->getCarAfterIncludes().size(), 1);
+		models.removeAt(1);
+		auto list3 = driver1.includes(models);
+		EXPECT_EQ(list3.first()->getCarAfterIncludes().size(), 0);
+		EXPECT_EQ(list3.value(1)->getCarAfterIncludes().size(), 0);
+		auto list4 = driver1.includes(models, ORMWhere(driver1.getColumnNameOf_id(), ORMWhere::Equals, driver1.getId()));
+		EXPECT_EQ(list4.size(), 1);
+		EXPECT_EQ(list4.first()->getName(), QString("Peter"));
+	}
+}
+
+TEST(UnitTest_MySQL, test_pluck)
+{
+	auto db = ORMDatabase::addORMDatabase(driverName);
+	db.setUserName(userName);
+	db.setHostName(hostName);
+	db.setPassword(password);
+
+	//Test open
+	if (!db.open())
+	{
+		QString temp = db.lastError().text();
+		qDebug() << "open fail" << "connect to mysql error" << temp;
+		EXPECT_TRUE(false);
+	}
+	else
+	{
+		((MySqlAdapter*)ORMDatabase::adapter)->initDB(dbName);
+		db.exec("DELETE FROM ORM_Model;");
+
+		ORM_Model model1, model2, model3;
+		/*model1.setMapDBTableName(model1.metaObject()->className() + QString("TBName"));
+		model2.setMapDBTableName(model2.metaObject()->className() + QString("TBName"));
+		model3.setMapDBTableName(model3.metaObject()->className() + QString("TBName"));*/
+
+		model1.removeAll();
+		model1.setnameInt(-2);
+		model1.setnameString("abc");
+		model2.setnameInt(1);
+		model2.setnameString("def");
+		model3.setnameInt(5);
+		model3.setnameString("ghi");
+		model1.save();
+		model2.save();
+		model3.save();
+		QList<QVariant> list = model1.pluck(model1.getColumnNameOf_id());
+		EXPECT_EQ(list.size(), 3);
+		EXPECT_EQ(list.value(0).toInt(), model1.getId());
+		EXPECT_EQ(list.value(1).toInt(), model2.getId());
+		EXPECT_EQ(list.value(2).toInt(), model3.getId());
+		list = model1.pluck("nameInt", ORMWhere("nameString", ORMWhere::Equals, "abc") ||
+							ORMWhere("nameString", ORMWhere::Equals, "ghi"));
+		EXPECT_EQ(list.size(), 2);
+		EXPECT_EQ(list.value(0).toInt(), -2);
+		EXPECT_EQ(list.value(1).toInt(), 5);
+		model1.setnameString("def");
+		model1.update();
+		list = model1.pluck("nameString", ORMWhere(), ORMGroupBy("nameString"));
+		EXPECT_EQ(list.size(), 2);
 	}
 }
