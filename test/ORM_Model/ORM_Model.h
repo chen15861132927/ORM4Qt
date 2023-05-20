@@ -47,8 +47,8 @@ class ORM_MODEL_EXPORT CarDriver : public ORMObject<CarDriver>
 	Q_OBJECT;
 	ORM_HAS_ONE(DriverLicense);
 	ORM_HAS_MANY(Car);
-	ORM_PROPERTY(QString, Name,"");
-
+	ORM_PROPERTY(QString, Name, "");
+	
 public:
 	CarDriver() {}
 };
