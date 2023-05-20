@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include "ormdatabase.h"
 #include "ormobject.h"
 #include "adapters/mysqladapter.h"

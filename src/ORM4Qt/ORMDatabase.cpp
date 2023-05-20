@@ -1,5 +1,4 @@
 #include "ormdatabase.h"
-
 ORMAbstractAdapter* ORMDatabase::adapter = 0;
 
 ORMDatabase::ORMDatabase(QString driverName) :
@@ -31,6 +30,7 @@ bool ORMDatabase::createDatabase(QString name)
 
 bool ORMDatabase::dropDatabase(QString name)
 {
+    
     return adapter->dropDatabase(name);
 }
 

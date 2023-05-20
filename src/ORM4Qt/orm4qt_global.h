@@ -68,11 +68,11 @@
     Assigns \a object with model. If the child exists, it is updated with new values.\n
     \b NOTE: \a object must exists in table!
 
-    <b>\a ClassName* create\a ClassName(const QHash<QString, QVariant> &values) \n</b>
+    <b>\a std::shared_ptr<ClassName> create\a ClassName(const QHash<QString, QVariant> &values) \n</b>
     Creates new \a ClassName object from QHash<fieldName, value> \a values and call save() method. After assigns \a object with model
     and return pointer to it.
 
-    <b>\a ClassName* get<em>ClassName</em>AfterIncludes() const \n </b>
+    <b>\a std::shared_ptr<ClassName> get<em>ClassName</em>AfterIncludes() const \n </b>
     Returns pointer to \a ClassName that be loaded by includes(..) method.
 
   */
@@ -85,7 +85,7 @@
         m_##ClassName##AfterIncludes = rec; \
     } \
     public: \
-    ClassName* get##ClassName() \
+    std::shared_ptr<ClassName> get##ClassName() \
     { \
         if(id < 0) \
             return 0; \
@@ -106,7 +106,7 @@
         hash.insert(QString(metaObject()->className()) + "_id", id); \
         ORMDatabase::adapter->updateRecord(#ClassName, childId, hash); \
     } \
-    ClassName* create##ClassName(QHash<QString, QVariant> &values) \
+    std::shared_ptr<ClassName> create##ClassName(QHash<QString, QVariant> &values) \
     { \
         if(id < 0) \
             return 0; \
@@ -114,7 +114,7 @@
         int childId = ORMDatabase::adapter->addRecord(#ClassName, values); \
         return translateRecToObj<ClassName>(ORMDatabase::adapter->find(#ClassName, "*","WHERE id = " + QString::number(childId)).first()); \
     } \
-    ClassName* get##ClassName##AfterIncludes() const\
+    std::shared_ptr<ClassName> get##ClassName##AfterIncludes() const\
     { \
         return translateRecToObj<ClassName>(m_##ClassName##AfterIncludes); \
     } \
@@ -146,18 +146,18 @@
      \endcode
      Macros generate next methods:
 
-     <b> QList<\a ClassName*> getAll\a ClassName() \n</b>
+     <b> QList<\a std::shared_ptr<ClassName>> getAll\a ClassName() \n</b>
      Returns all \a ClassName, associated with model or empty QList, if no such child object.
 
      <b>void add\a ClassName(const \a Classname &object) \n</b>
      Assigns \a object with model.\n
      \b NOTE: \a object must exists in table!
 
-     <b>\a ClassName* create\a ClassName(const QHash<QString, QVariant> &values) \n</b>
+     <b>\a std::shared_ptr<ClassName> create\a ClassName(const QHash<QString, QVariant> &values) \n</b>
      Creates new \a ClassName object from QHash<fieldName, value> \a values and call save() method. After assigns \a object with model
      and return pointer to it.
 
-     <b>QList<\a ClassName*> find<em>ClassName</em>Where(ORMWhere where, ORMGroupBy group = ORMGroupBy(), ORMOrderBy order = ORMOrderBy()) \n</b>
+     <b>QList<\a std::shared_ptr<ClassName>> find<em>ClassName</em>Where(ORMWhere where, ORMGroupBy group = ORMGroupBy(), ORMOrderBy order = ORMOrderBy()) \n</b>
      Find child objects appropriate given \a where and returns them in accordance with \a group and \a order.
 
      <b>void get<em>ClassName</em>AfterIncludes() const \n </b>
@@ -173,9 +173,9 @@
         m_##ClassName##AfterIncludes.append(rec); \
     } \
     public: \
-    QList<ClassName*> getAll##ClassName(ORMGroupBy group = ORMGroupBy(), ORMOrderBy order = ORMOrderBy()) \
+    QList<std::shared_ptr<ClassName>> getAll##ClassName(ORMGroupBy group = ORMGroupBy(), ORMOrderBy order = ORMOrderBy()) \
     { \
-        QList<ClassName*> result; \
+        QList<std::shared_ptr<ClassName>> result; \
         if(id < 0) \
             return result; \
         QString whereString = QString("WHERE %1_id = %2") \
@@ -196,7 +196,7 @@
         hash.insert(QString("%1_id").arg(metaObject()->className()), QString::number(id)); \
         ORMDatabase::adapter->updateRecord(#ClassName, childId, hash); \
     } \
-    ClassName* create##ClassName(QHash<QString, QVariant> &values) \
+    std::shared_ptr<ClassName> create##ClassName(QHash<QString, QVariant> &values) \
     { \
         if(id < 0) \
             return 0; \
@@ -204,9 +204,9 @@
         int childId = ORMDatabase::adapter->addRecord(#ClassName, values); \
         return translateRecToObj<ClassName>(ORMDatabase::adapter->find(#ClassName, "*", "WHERE id = " + QString::number(childId)).first()); \
     } \
-    QList<ClassName*> find##ClassName##Where(ORMWhere where, ORMGroupBy group = ORMGroupBy(), ORMOrderBy order = ORMOrderBy()) \
+    QList<std::shared_ptr<ClassName>> find##ClassName##Where(ORMWhere where, ORMGroupBy group = ORMGroupBy(), ORMOrderBy order = ORMOrderBy()) \
     { \
-        QList<ClassName*> result; \
+        QList<std::shared_ptr<ClassName>> result; \
         if(id < 0) \
             return result; \
         QString whereString = QString("WHERE %1_id = %2") \
@@ -220,9 +220,9 @@
                 result.append(translateRecToObj<ClassName>(list.value(i))); \
         return result; \
     } \
-    QList<ClassName*> get##ClassName##AfterIncludes() const \
+    QList<std::shared_ptr<ClassName>> get##ClassName##AfterIncludes() const \
     { \
-        QList<ClassName*> list; \
+        QList<std::shared_ptr<ClassName>> list; \
         for(int i = 0; i < m_##ClassName##AfterIncludes.size(); i++) \
             list.append(translateRecToObj<ClassName>(m_##ClassName##AfterIncludes.value(i))); \
         return list; \

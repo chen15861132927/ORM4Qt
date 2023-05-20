@@ -109,7 +109,8 @@ TEST(UnitTest_MySQL, test_ORM_HAS_ONE)
 		std::cout << "Warning: " << db.lastError().text().toStdString() << endl;
 
 		CarDriver driver1, driver2;
-		DriverLicense license, * pointer;
+		DriverLicense license;
+		std::shared_ptr<DriverLicense> pointer;
 		driver1.removeAll();
 		license.removeAll();
 		driver1.setName("Alex");
@@ -120,26 +121,19 @@ TEST(UnitTest_MySQL, test_ORM_HAS_ONE)
 		QHash<QString, QVariant> info;
 		info.insert("Number", 123);
 		EXPECT_EQ((pointer = driver1.createDriverLicense(info))->getNumber(), 123);
-		delete pointer;
 		EXPECT_EQ((pointer = driver1.getDriverLicense())->getNumber(), 123);
-		delete pointer;
 		EXPECT_TRUE(driver2.getDriverLicense() == 0);
 		license.setNumber(456);
 		license.save();
 		driver2.setDriverLicense(license.getId());
 		EXPECT_EQ((pointer = driver2.getDriverLicense())->getNumber(), 456);
-		delete pointer;
 		int idDr2Lic = (pointer = driver2.getDriverLicense())->getId();
-		delete pointer;
 		EXPECT_EQ(license.exists(idDr2Lic), true);
 		EXPECT_EQ((pointer = driver2.getDriverLicense())->remove(), true);
-		delete pointer;
 		EXPECT_EQ(license.exists(idDr2Lic), false);
 		EXPECT_TRUE(driver2.getDriverLicense() == 0);
 		EXPECT_TRUE((pointer = driver1.getDriverLicense())->getId() >= 0);
-		delete pointer;
 	}
-
 }
 
 TEST(UnitTest_MySQL, test_ORM_HAS_MANY)
@@ -167,7 +161,8 @@ TEST(UnitTest_MySQL, test_ORM_HAS_MANY)
 		std::cout << "Warning: " << db.lastError().text().toStdString() << endl;
 
 		CarDriver driver1, driver2;
-		Car car1, car2, car3, * pointer;
+		Car car1, car2, car3;
+		std::shared_ptr<Car> pointer;
 		driver1.removeAll();
 		car1.removeAll();
 		driver1.setName("Alex");
@@ -178,12 +173,10 @@ TEST(UnitTest_MySQL, test_ORM_HAS_MANY)
 		QHash<QString, QVariant> info;
 		info.insert("Number", "123");
 		EXPECT_EQ((pointer = driver1.createCar(info))->getNumber(), QString("123"));
-		delete pointer;
 		info.clear();
 		info.insert("Number", "456");
 		EXPECT_EQ((pointer = driver1.createCar(info))->getNumber(), QString("456"));
-		delete pointer;
-		QList<Car*> list = driver1.getAllCar();
+		auto list = driver1.getAllCar();
 		EXPECT_EQ(list.size(), 2);
 		EXPECT_EQ(list.first()->getNumber(), QString("123"));
 		EXPECT_EQ(list.value(1)->getNumber(), QString("456"));
