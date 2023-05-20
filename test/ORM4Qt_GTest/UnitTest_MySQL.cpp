@@ -375,14 +375,14 @@ TEST(UnitTest_MySQL, test_pluck)
 		EXPECT_EQ(list.value(0).toInt(), model1.getId());
 		EXPECT_EQ(list.value(1).toInt(), model2.getId());
 		EXPECT_EQ(list.value(2).toInt(), model3.getId());
-		list = model1.pluck("nameInt", ORMWhere("nameString", ORMWhere::Equals, "abc") ||
-							ORMWhere("nameString", ORMWhere::Equals, "ghi"));
+		list = model1.pluck(model1.getColumnNameOf_nameInt(), ORMWhere(model1.getColumnNameOf_nameString(), ORMWhere::Equals, "abc") ||
+							ORMWhere(model1.getColumnNameOf_nameString(), ORMWhere::Equals, "ghi"));
 		EXPECT_EQ(list.size(), 2);
 		EXPECT_EQ(list.value(0).toInt(), -2);
 		EXPECT_EQ(list.value(1).toInt(), 5);
 		model1.setnameString("def");
 		model1.update();
-		list = model1.pluck("nameString", ORMWhere(), ORMGroupBy("nameString"));
+		list = model1.pluck(model1.getColumnNameOf_nameString(), ORMWhere(), ORMGroupBy(model1.getColumnNameOf_nameString()));
 		EXPECT_EQ(list.size(), 2);
 	}
 }
