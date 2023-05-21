@@ -2,9 +2,37 @@
 
 #include "orm_model_global.h"
 #include "../../src/ORM4Qt/ORM4Qt.h"
+class ORM_MODEL_EXPORT OutClassEnumType :public QObject
+{
+public:
+	enum class OutClassEnumDemoPriority
+	{
+		High = 2,
+		Low = 4,
+		VeryHigh = 6,
+		VeryLow = 15,
+	};
+	Q_ENUM(OutClassEnumDemoPriority);
+	Q_OBJECT;
 
+public:
+	OutClassEnumType()
+	{
+	}
+
+};
 class ORM_MODEL_EXPORT ORM_Model : public ORMObject<ORM_Model>
 {
+public:
+	enum class InClassEnumPriority
+	{
+		High = 1,
+		Low = 3,
+		VeryHigh = 5,
+		VeryLow = 11,
+	};
+	Q_ENUM(InClassEnumPriority);
+
 	Q_OBJECT;
 
 	ORM_PROPERTY(bool, nameBool, false);
@@ -19,6 +47,8 @@ class ORM_MODEL_EXPORT ORM_Model : public ORMObject<ORM_Model>
 	ORM_PROPERTY(QTime, nameTime, QTime());
 	ORM_PROPERTY(QDateTime, nameDatetime, QDateTime());
 	ORM_PROPERTY(QString, nameString, "");
+	ORM_PROPERTY(InClassEnumPriority, InEnumPriority, InClassEnumPriority::Low);
+	ORM_PROPERTY(OutClassEnumType::OutClassEnumDemoPriority, OutEnumDemoPriority, OutClassEnumType::OutClassEnumDemoPriority::High);//0--X 1--Y 2--Z
 
 public:
 	ORM_Model() {};
