@@ -14,7 +14,19 @@
 # define ORM4QT_EXPORT
 #endif
 
+#define XCAT(A, B,C) A##B##C
+#define CAT(A, B,C) XCAT(A, B,C)
+#define TO_STR(ARG) #ARG   
+#define TO_STR_Define(ARG) TO_STR(ARG)
+
 #define idColumnName  "id"
+#define ManyRelation "ManyRelation"
+#define OneRelation "OneRelation"
+#define CreateIng create
+#define WithRelation TableWithRelation
+
+#define CreateTableWithRelationStr(x) TO_STR_Define(CreateIng)+##x##+TO_STR_Define(WithRelation)
+#define CreateTableWithRelationMethod(x) CAT(CreateIng,x,WithRelation)
 
 /*! \file
 */
@@ -83,7 +95,17 @@
   */
 
 #define ORM_HAS_ONE(ClassName) \
-    private: \
+protected:\
+    Q_INVOKABLE QString OneRelation##From##ClassName()\
+    {\
+        return #ClassName; \
+    }\
+    Q_INVOKABLE bool CreateTableWithRelationMethod(##ClassName)()\
+    {\
+        ClassName _##ClassName##; \
+        return _##ClassName##.createTableWithRelation(); \
+    }\
+private: \
     QSqlRecord m_##ClassName##AfterIncludes; \
     Q_INVOKABLE void add##ClassName##AfterIncludes(QSqlRecord rec) \
     { \
@@ -171,7 +193,17 @@
    */
 
 #define ORM_HAS_MANY(ClassName) \
-    private: \
+protected:\
+    Q_INVOKABLE QString ManyRelation##From##ClassName()\
+    {\
+        return #ClassName; \
+    }\
+    Q_INVOKABLE bool CreateTableWithRelationMethod(##ClassName)()\
+    {\
+        ClassName _##ClassName##; \
+        return _##ClassName##.createTableWithRelation(); \
+    }\
+private: \
     QList<QSqlRecord> m_##ClassName##AfterIncludes; \
     Q_INVOKABLE void add##ClassName##AfterIncludes(QSqlRecord rec) \
     { \

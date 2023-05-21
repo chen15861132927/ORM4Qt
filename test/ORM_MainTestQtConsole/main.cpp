@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 		auto res = db.createDatabase("Test_ORMDatabase");
 		ORM_Model model;
 
-		res = model.createTable();
+		res = model.createTableWithRelation();
 		qDebug() << "createTable:" << res;
 
 	}

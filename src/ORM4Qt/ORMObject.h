@@ -4,12 +4,18 @@
 #include <QMetaProperty>
 #include <QSqlRecord>
 #include <QVector>
+#include <QMetaProperty>
 #include <QSqlRelationalTableModel>
 #include "ormdatabase.h"
 #include "ormwhere.h"
 #include "ormgroupby.h"
 #include "ormorderby.h"
-
+#include <memory>
+#include <qDebug>
+#include <QThread>
+#if defined(_MSC_VER) && (_MSC_VER >= 1600)    
+# pragma execution_character_set("utf-8")    
+#endif
 /*!
    \class ORMObject
    \brief The ORMObject is a base class for all your models.
@@ -20,9 +26,9 @@
    Car : public ORMObject<Car>
    {
 	Car();
-	ORM_PROPERTY(QString, brand)
-	ORM_PROPERTY(QDate, year)
-	ORM_PROPERTY(QString, color)
+	ORM_PROPERTY(QString, brand, "")
+	ORM_PROPERTY(QDate, year, new QDate())
+	ORM_PROPERTY(QString, color, "")
    }
    \endcode
  */
@@ -41,17 +47,51 @@ public:
 		m_hasUnsavedChanges = false;
 	}
 	/*!
-	   Creates table associated with model.
+	Creates table associated with model with Relation(one or many).
 
-	   Returns true if table created, otherwise return false.
-	 */
-	bool createTable() const
+	Returns true if table created, otherwise return false.
+	*/
+	bool createTableWithRelation() 
 	{
-		QHash<QString, QString> info; //QHash<name, type>
-		for (int i = 1; i < metaObject()->propertyCount(); i++)
-			info.insert(metaObject()->property(i).name(), metaObject()->property(i).typeName());
-		return ORMDatabase::adapter->createTable(getMapDBTableName(), info);
+		bool res = createTableNoRelation();
+		if (res)
+		{
+			LoadCurrentTableRelations();
+
+			for (QString item : m_oneRelations)
+			{
+				bool itemres = true;
+				QString methodName = QString(CreateTableWithRelationStr(item)).arg(item);
+				try
+				{
+					QMetaObject::invokeMethod(this, qPrintable(methodName), Qt::DirectConnection, Q_RETURN_ARG(bool, itemres));
+				}
+				catch (std::exception ex)
+				{
+					itemres = false;
+				}
+				res = res & itemres & createTableRelation(ORMAbstractAdapter::Relation::HasOne, item);
+			}
+
+			for (QString item : m_manyRelations)
+			{
+				bool itemres = true;
+				QString methodName = QString(CreateTableWithRelationStr(item)).arg(item);
+				try
+				{
+					QMetaObject::invokeMethod(this, qPrintable(methodName), Qt::DirectConnection, Q_RETURN_ARG(bool, itemres));
+				}
+				catch (std::exception ex)
+				{
+					itemres = false;
+				}
+				res = res & itemres & createTableRelation(ORMAbstractAdapter::Relation::HasMany, item);
+			}
+		}
+
+		return res;
 	}
+	
 	/*!
 	   Creates table relation \a rel to child model \a childModelName.
 
@@ -464,13 +504,13 @@ public:
 	}
 	void setMapDBTableName(QString mapDBTableName)
 	{
-		isSettingTableNameBySelf = true;
+		m_isSettingTableNameBySelf = true;
 		m_mapDBTableName = mapDBTableName;
 	}
 
 	const QString& getMapDBTableName()const
 	{
-		if (!isSettingTableNameBySelf)
+		if (!m_isSettingTableNameBySelf)
 		{
 			m_mapDBTableName = metaObject()->className();
 		}
@@ -481,6 +521,30 @@ public:
 		return m_idColumnName;
 	}
 	
+	void LoadCurrentTableRelations()
+	{
+		if (m_isGotRelations)
+			return;
+		for (int i = metaObject()->methodOffset(); i < metaObject()->methodCount(); i++)
+		{
+			QMetaMethod method = metaObject()->method(i);
+			QString methodName = method.name();
+			qDebug() << methodName;
+			if (method.name().startsWith(ManyRelation))
+			{
+				QString retVal;
+				method.invokeOnGadget(this, Q_RETURN_ARG(QString, retVal));//true
+				m_manyRelations.append(retVal);
+			}
+			if (method.name().startsWith(OneRelation))
+			{
+				QString retVal;
+				method.invokeOnGadget(this, Q_RETURN_ARG(QString, retVal));//true
+				m_oneRelations.append(retVal);
+			}
+		}
+		m_isGotRelations = true;
+	}
 
 protected:
 	qlonglong id;
@@ -507,9 +571,37 @@ protected:
 
 
 private:
+	/*!
+	   Creates table associated with model with out Relation(one or many).
+
+	   Returns true if table created, otherwise return false.
+	 */
+	bool createTableNoRelation() const
+	{
+		QHash<QString, QString> info; //QHash<name, type>
+		for (int i = 1; i < metaObject()->propertyCount(); i++)
+		{
+			auto columnProperty = metaObject()->property(i);
+			if (columnProperty.isEnumType())
+			{
+				info.insert(columnProperty.name(), "int");
+			}
+			else
+			{
+				info.insert(columnProperty.name(), columnProperty.typeName());
+			}
+		}
+		return ORMDatabase::adapter->createTable(getMapDBTableName(), info);
+	}
+
 	mutable QString m_mapDBTableName = "";
 
-	bool isSettingTableNameBySelf = false;
+	bool m_isSettingTableNameBySelf = false;
 
 	QString m_idColumnName = idColumnName;
+
+	bool m_isGotRelations = false;
+
+	QList<QString> m_oneRelations;
+	QList<QString> m_manyRelations;
 };

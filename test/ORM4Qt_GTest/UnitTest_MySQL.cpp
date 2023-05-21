@@ -7,11 +7,9 @@ QString driverName = "QMYSQL";
 QString userName = "root";
 QString hostName = "localhost";
 QString password = "123456";
+
 TEST(UnitTest_MySQL, test_createTable)
 {
-	//EXPECT_EQ(1, 1);
-	//EXPECT_TRUE(true);
-
 	auto db = ORMDatabase::addORMDatabase(driverName);
 	db.setUserName(userName);
 	db.setHostName(hostName);
@@ -40,14 +38,15 @@ TEST(UnitTest_MySQL, test_createTable)
 		model.setMapDBTableName(model.metaObject()->className() + QString("TBName"));
 		driver.setMapDBTableName(driver.metaObject()->className() + QString("TBName"));
 		license.setMapDBTableName(license.metaObject()->className() + QString("TBName"));
-		car.setMapDBTableName(car.metaObject()->className() + QString("TBName"));*/
+		car.setMapDBTableName(car.metaObject()->className() + QString("TBName"));
+		*/
 
-		EXPECT_TRUE(model.createTable());
-		EXPECT_EQ(driver.createTable(), true);
-		EXPECT_EQ(license.createTable(), true);
-		EXPECT_EQ(car.createTable(), true);
+		EXPECT_TRUE(model.createTableWithRelation());
+		EXPECT_EQ(driver.createTableWithRelation(), true);
+		/*EXPECT_EQ(license.createTableNoRelation(), true);
+		EXPECT_EQ(car.createTableNoRelation(), true);
 		EXPECT_EQ(driver.createTableRelation(ORMAbstractAdapter::HasOne, license.getMapDBTableName()), true);
-		EXPECT_EQ(driver.createTableRelation(ORMAbstractAdapter::HasMany, car.getMapDBTableName()), true);
+		EXPECT_EQ(driver.createTableRelation(ORMAbstractAdapter::HasMany, car.getMapDBTableName()), true);*/
 	}
 }
 
