@@ -17,9 +17,10 @@ my local mysql version is 8.0, Connector C++ 8.0
 
   you can build it by yourself or download for internet.
   
-  reference link https://zhuanlan.zhihu.com/p/426881614
+  reference link
+  https://zhuanlan.zhihu.com/p/426881614
   
-			     https://stackoverflow.com/questions/6483523/qt-how-to-getcompile-mysql-driver
+  https://stackoverflow.com/questions/6483523/qt-how-to-getcompile-mysql-driver
                  
 2.libssl-1_1-x64.dll libcrypto-1_1-x64.dll 
 

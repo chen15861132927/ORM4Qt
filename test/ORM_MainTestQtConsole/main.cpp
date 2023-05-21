@@ -7,23 +7,32 @@
 #include "../ORM_Model/ORM_Model.h"
 int main(int argc, char* argv[])
 {
+	QString dbName = "Test_ORMDatabase";
+	QString driverName = "QMYSQL";
+	QString userName = "root";
+	QString hostName = "localhost";
+	QString password = "123456";
 	QCoreApplication a(argc, argv);
-	auto db = ORMDatabase::addORMDatabase("QMYSQL");
-	db.setUserName("root");
-	db.setHostName("localhost");
-	db.setPassword("123456");
+	auto db = std::make_shared<ORMDatabase>(driverName);
+	db->setUserName(userName);
+	db->setHostName(hostName);
+	db->setPassword(password);
+
 	//Test open
-	if (!db.open())
+	if (!db->open())
 	{
-		QString temp = db.lastError().text();
+		QString temp = db->getAdapter()->lastError().text();
 		qDebug() << "open fail" << "connect to mysql error" << temp;
-		return -1;
+
 	}
 	else
 	{
-		auto res = db.createDatabase("Test_ORMDatabase");
-		ORM_Model model;
+		db->getAdapter()->initDB(dbName);
+		db->getAdapter()->exec(QString("DROP DATABASE %1;").arg(dbName));
 
+		auto res = db->createDatabase(dbName);
+		ORM_Model model;
+		model.setAdapter(db->getAdapter());
 		res = model.createTableWithRelation();
 		qDebug() << "createTable:" << res;
 

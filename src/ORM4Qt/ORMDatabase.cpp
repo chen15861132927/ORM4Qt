@@ -1,45 +1,37 @@
 #include "ormdatabase.h"
-ORMAbstractAdapter* ORMDatabase::adapter = 0;
 
-ORMDatabase::ORMDatabase(QString driverName) :
-    QSqlDatabase(QSqlDatabase::addDatabase(driverName))
+ORMDatabase::ORMDatabase(QString driverName)
 {
-    if(driverName == "QMYSQL")
-        adapter = new MySqlAdapter();
-    else if(driverName == "QSQLITE")
-        adapter = new SqliteAdapter;
-    else if(driverName == "QPSQL")
-        adapter = new PostgreSQLAdapter;
-    else
-        adapter = new SqlAdapter;
-}
+	m_db = std::make_shared<ORMQSqlDatabase>(driverName);
+	if (driverName == "QMYSQL")
+		m_adapter = std::make_shared<MySqlAdapter>(m_db);
+	else if (driverName == "QSQLITE")
+		m_adapter = std::make_shared<SqliteAdapter>(m_db);
+	else if (driverName == "QPSQL")
+		m_adapter = std::make_shared<PostgreSQLAdapter>(m_db);
+	else
+		m_adapter = std::make_shared<SqlAdapter>(m_db);
 
-ORMDatabase::ORMDatabase()
-{
-}
 
-ORMDatabase ORMDatabase::addORMDatabase(QString driverName)
-{
-    return ORMDatabase(driverName);
 }
 
 bool ORMDatabase::createDatabase(QString name)
 {
-    return adapter->createDatabase(name);
+	return m_adapter->createDatabase(name);
 }
 
 bool ORMDatabase::dropDatabase(QString name)
 {
-    
-    return adapter->dropDatabase(name);
+
+	return m_adapter->dropDatabase(name);
 }
 
 QString ORMDatabase::lastQuery() const
 {
-    return adapter->lastQuery();
+	return m_adapter->lastQuery();
 }
 
 void ORMDatabase::setLogDeep(OrmLogger::LogDeep deep)
 {
-    adapter->m_logger.setLogDeep(deep);
+	m_adapter->m_logger.setLogDeep(deep);
 }

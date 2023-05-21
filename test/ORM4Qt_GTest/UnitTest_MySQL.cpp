@@ -10,29 +10,30 @@ QString password = "123456";
 
 TEST(UnitTest_MySQL, test_createTable)
 {
-	auto db = ORMDatabase::addORMDatabase(driverName);
-	db.setUserName(userName);
-	db.setHostName(hostName);
-	db.setPassword(password);
+	auto db = std::make_shared<ORMDatabase>(driverName);
+	db->setUserName(userName);
+	db->setHostName(hostName);
+	db->setPassword(password);
 
 	//Test open
-	if (!db.open())
+	if (!db->open())
 	{
-		QString temp = db.lastError().text();
+		QString temp = db->getAdapter()->lastError().text();
 		qDebug() << "open fail" << "connect to mysql error" << temp;
 		EXPECT_TRUE(false);
 	}
 	else
 	{
-		db.exec(QString("DROP DATABASE %1;").arg(dbName));
+		db->getAdapter()->initDB(dbName);
+		db->getAdapter()->exec(QString("DROP DATABASE %1;").arg(dbName));
 
-		auto res = db.createDatabase(dbName);
+		auto res = db->createDatabase(dbName);
 		ORM_Model model;
- 
-
 		CarDriver driver;
-		DriverLicense license;
-		Car car;
+
+		model.setAdapter(db->getAdapter());
+		driver.setAdapter(db->getAdapter());
+
 		/*
 		TODO : verify table Name can be modify.
 		model.setMapDBTableName(model.metaObject()->className() + QString("TBName"));
@@ -43,33 +44,32 @@ TEST(UnitTest_MySQL, test_createTable)
 
 		EXPECT_TRUE(model.createTableWithRelation());
 		EXPECT_EQ(driver.createTableWithRelation(), true);
-		/*EXPECT_EQ(license.createTableNoRelation(), true);
-		EXPECT_EQ(car.createTableNoRelation(), true);
-		EXPECT_EQ(driver.createTableRelation(ORMAbstractAdapter::HasOne, license.getMapDBTableName()), true);
-		EXPECT_EQ(driver.createTableRelation(ORMAbstractAdapter::HasMany, car.getMapDBTableName()), true);*/
+
 	}
 }
 
 TEST(UnitTest_MySQL, test_save)
 {
-	auto db = ORMDatabase::addORMDatabase(driverName);
-	db.setUserName(userName);
-	db.setHostName(hostName);
-	db.setPassword(password);
+	auto db = std::make_shared<ORMDatabase>(driverName);
+	db->setUserName(userName);
+	db->setHostName(hostName);
+	db->setPassword(password);
 
 	//Test open
-	if (!db.open())
+	if (!db->open())
 	{
-		QString temp = db.lastError().text();
+		QString temp = db->getAdapter()->lastError().text();
 		qDebug() << "open fail" << "connect to mysql error" << temp;
 		EXPECT_TRUE(false);
 	}
 	else
 	{
-		((MySqlAdapter*)ORMDatabase::adapter)->initDB(dbName);
-		db.exec("DELETE FROM ORM_Model;");
+		db->getAdapter()->initDB(dbName);
+		db->getAdapter()->exec("DELETE FROM ORM_Model;");
 		QTime time = QTime::currentTime();
 		ORM_Model model;
+		model.setAdapter(db->getAdapter());
+
 		/*model.setMapDBTableName(model.metaObject()->className() + QString("TBName"));
 		*/
 		model.setnameBool(true);
@@ -85,7 +85,8 @@ TEST(UnitTest_MySQL, test_save)
 		model.setnameUint(60000);
 		model.setnameUlonglong(123456789123456789);
 		EXPECT_EQ(model.save(), true);
-		QSqlQuery query = db.exec("SELECT * FROM ORM_Model;");
+		db->getAdapter()->exec("SELECT * FROM ORM_Model;");
+		QSqlQuery query = db->getAdapter()->lastQSqlQuery();
 		query.next();
 		for (int i = 0; i < query.size(); i++)
 		{
@@ -99,30 +100,33 @@ TEST(UnitTest_MySQL, test_save)
 
 TEST(UnitTest_MySQL, test_ORM_HAS_ONE)
 {
-	auto db = ORMDatabase::addORMDatabase(driverName);
-	db.setUserName(userName);
-	db.setHostName(hostName);
-	db.setPassword(password);
+	auto db = std::make_shared<ORMDatabase>(driverName);
+	db->setUserName(userName);
+	db->setHostName(hostName);
+	db->setPassword(password);
 
 	//Test open
-	if (!db.open())
+	if (!db->open())
 	{
-		QString temp = db.lastError().text();
+		QString temp = db->getAdapter()->lastError().text();
 		qDebug() << "open fail" << "connect to mysql error" << temp;
 		EXPECT_TRUE(false);
 	}
 	else
 	{
-		((MySqlAdapter*)ORMDatabase::adapter)->initDB(dbName);
-		db.exec("DELETE FROM Car;");
-		std::cout << "Warning: " << db.lastError().text().toStdString() << endl;
-		db.exec("DELETE FROM DriverLicense;");
+		db->getAdapter()->initDB(dbName);
+		db->getAdapter()->exec("DELETE FROM Car;");
+		std::cout << "Warning: " << db->getAdapter()->lastError().text().toStdString() << endl;
+		db->getAdapter()->exec("DELETE FROM DriverLicense;");
 
-		db.exec("DELETE FROM CarDriver;");
-		std::cout << "Warning: " << db.lastError().text().toStdString() << endl;
+		db->getAdapter()->exec("DELETE FROM CarDriver;");
+		std::cout << "Warning: " << db->getAdapter()->lastError().text().toStdString() << endl;
 
 		CarDriver driver1, driver2;
 		DriverLicense license;
+		driver1.setAdapter(db->getAdapter());
+		driver2.setAdapter(db->getAdapter());
+		license.setAdapter(db->getAdapter());
 		/*driver1.setMapDBTableName(driver1.metaObject()->className() + QString("TBName"));
 		driver2.setMapDBTableName(driver2.metaObject()->className() + QString("TBName"));
 		license.setMapDBTableName(license.metaObject()->className() + QString("TBName"));*/
@@ -155,30 +159,36 @@ TEST(UnitTest_MySQL, test_ORM_HAS_ONE)
 
 TEST(UnitTest_MySQL, test_ORM_HAS_MANY)
 {
-	auto db = ORMDatabase::addORMDatabase(driverName);
-	db.setUserName(userName);
-	db.setHostName(hostName);
-	db.setPassword(password);
+	auto db = std::make_shared<ORMDatabase>(driverName);
+	db->setUserName(userName);
+	db->setHostName(hostName);
+	db->setPassword(password);
 
 	//Test open
-	if (!db.open())
+	if (!db->open())
 	{
-		QString temp = db.lastError().text();
+		QString temp = db->getAdapter()->lastError().text();
 		qDebug() << "open fail" << "connect to mysql error" << temp;
 		EXPECT_TRUE(false);
 	}
 	else
 	{
-		((MySqlAdapter*)ORMDatabase::adapter)->initDB(dbName);
-		db.exec("DELETE FROM Car;");
-		std::cout << "Warning: " << db.lastError().text().toStdString() << endl;
-		db.exec("DELETE FROM DriverLicense;");
+		db->getAdapter()->initDB(dbName);
+		db->getAdapter()->exec("DELETE FROM Car;");
+		std::cout << "Warning: " << db->getAdapter()->lastError().text().toStdString() << endl;
+		db->getAdapter()->exec("DELETE FROM DriverLicense;");
 
-		db.exec("DELETE FROM CarDriver;");
-		std::cout << "Warning: " << db.lastError().text().toStdString() << endl;
+		db->getAdapter()->exec("DELETE FROM CarDriver;");
+		std::cout << "Warning: " << db->getAdapter()->lastError().text().toStdString() << endl;
 
 		CarDriver driver1, driver2;
 		Car car1, car2, car3;
+		driver1.setAdapter(db->getAdapter());
+		driver2.setAdapter(db->getAdapter());
+		car1.setAdapter(db->getAdapter());
+		car2.setAdapter(db->getAdapter());
+		car3.setAdapter(db->getAdapter());
+
 		/*driver1.setMapDBTableName(driver1.metaObject()->className() + QString("TBName"));
 		driver2.setMapDBTableName(driver2.metaObject()->className() + QString("TBName"));
 		car1.setMapDBTableName(car1.metaObject()->className() + QString("TBName"));
@@ -252,31 +262,38 @@ TEST(UnitTest_MySQL, test_ORM_HAS_MANY)
 
 TEST(UnitTest_MySQL, test_includes)
 {
-	auto db = ORMDatabase::addORMDatabase(driverName);
-	db.setUserName(userName);
-	db.setHostName(hostName);
-	db.setPassword(password);
+	auto db = std::make_shared<ORMDatabase>(driverName);
+	db->setUserName(userName);
+	db->setHostName(hostName);
+	db->setPassword(password);
 
 	//Test open
-	if (!db.open())
+	if (!db->open())
 	{
-		QString temp = db.lastError().text();
+		QString temp = db->getAdapter()->lastError().text();
 		qDebug() << "open fail" << "connect to mysql error" << temp;
 		EXPECT_TRUE(false);
 	}
 	else
 	{
-		((MySqlAdapter*)ORMDatabase::adapter)->initDB(dbName);
-		db.exec("DELETE FROM Car;");
-		std::cout << "Warning: " << db.lastError().text().toStdString() << endl;
-		db.exec("DELETE FROM DriverLicense;");
+		db->getAdapter()->initDB(dbName);
+		db->getAdapter()->exec("DELETE FROM Car;");
+		std::cout << "Warning: " << db->getAdapter()->lastError().text().toStdString() << endl;
+		db->getAdapter()->exec("DELETE FROM DriverLicense;");
 
-		db.exec("DELETE FROM CarDriver;");
-		std::cout << "Warning: " << db.lastError().text().toStdString() << endl;
+		db->getAdapter()->exec("DELETE FROM CarDriver;");
+		std::cout << "Warning: " << db->getAdapter()->lastError().text().toStdString() << endl;
 
 		Car car1, car2, car3;
 		DriverLicense license1, license2;
 		CarDriver driver1, driver2;
+		driver1.setAdapter(db->getAdapter());
+		driver2.setAdapter(db->getAdapter());
+		license1.setAdapter(db->getAdapter());
+		license2.setAdapter(db->getAdapter());
+		car1.setAdapter(db->getAdapter());
+		car2.setAdapter(db->getAdapter());
+		car3.setAdapter(db->getAdapter());
 		/*license1.setMapDBTableName(driver1.metaObject()->className() + QString("TBName"));
 		license2.setMapDBTableName(driver2.metaObject()->className() + QString("TBName"));
 		driver1.setMapDBTableName(driver1.metaObject()->className() + QString("TBName"));
@@ -337,28 +354,30 @@ TEST(UnitTest_MySQL, test_includes)
 
 TEST(UnitTest_MySQL, test_pluck)
 {
-	auto db = ORMDatabase::addORMDatabase(driverName);
-	db.setUserName(userName);
-	db.setHostName(hostName);
-	db.setPassword(password);
+	auto db = std::make_shared<ORMDatabase>(driverName);
+	db->setUserName(userName);
+	db->setHostName(hostName);
+	db->setPassword(password);
 
 	//Test open
-	if (!db.open())
+	if (!db->open())
 	{
-		QString temp = db.lastError().text();
+		QString temp = db->getAdapter()->lastError().text();
 		qDebug() << "open fail" << "connect to mysql error" << temp;
 		EXPECT_TRUE(false);
 	}
 	else
 	{
-		((MySqlAdapter*)ORMDatabase::adapter)->initDB(dbName);
-		db.exec("DELETE FROM ORM_Model;");
+		db->getAdapter()->initDB(dbName);
+		db->getAdapter()->exec("DELETE FROM ORM_Model;");
 
 		ORM_Model model1, model2, model3;
 		/*model1.setMapDBTableName(model1.metaObject()->className() + QString("TBName"));
 		model2.setMapDBTableName(model2.metaObject()->className() + QString("TBName"));
 		model3.setMapDBTableName(model3.metaObject()->className() + QString("TBName"));*/
-
+		model1.setAdapter(db->getAdapter());
+		model2.setAdapter(db->getAdapter());
+		model3.setAdapter(db->getAdapter());
 		model1.removeAll();
 		model1.setnameInt(-2);
 		model1.setnameString("abc");

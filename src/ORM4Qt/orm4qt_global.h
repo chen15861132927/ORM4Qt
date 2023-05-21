@@ -103,6 +103,7 @@ protected:\
     Q_INVOKABLE bool CreateTableWithRelationMethod(##ClassName)()\
     {\
         ClassName _##ClassName##; \
+        _##ClassName##.setAdapter(m_adapter);\
         return _##ClassName##.createTableWithRelation(); \
     }\
 private: \
@@ -119,11 +120,11 @@ private: \
         QString whereString = QString("WHERE %1_"+getColumnNameOf_id()+" = %2") \
                                 .arg(getMapDBTableName()) \
                                 .arg(id); \
-        QList<QSqlRecord> list = ORMDatabase::adapter->find(#ClassName, "*", whereString); \
+        QList<QSqlRecord> list = m_adapter->find(#ClassName, "*", whereString); \
         if(list.isEmpty()) \
             return 0; \
         else \
-            return translateRecToObj<ClassName>(list.first()); \
+            return translateRecToObj<ClassName>(list.first(), m_adapter); \
     } \
     void set##ClassName(const qlonglong childId) \
     { \
@@ -131,23 +132,23 @@ private: \
             return; \
         QHash<QString, QVariant> hash; \
         hash.insert(QString(getMapDBTableName()) + "_"+getColumnNameOf_id(), id); \
-        ORMDatabase::adapter->updateRecord(#ClassName, childId, hash); \
+        m_adapter->updateRecord(#ClassName, childId, hash); \
     } \
     std::shared_ptr<ClassName> create##ClassName(QHash<QString, QVariant> &values) \
     { \
         if(id < 0) \
             return 0; \
         values.insert(QString("%1_"+getColumnNameOf_id()).arg(getMapDBTableName()), id); \
-        int childId = ORMDatabase::adapter->addRecord(#ClassName, values); \
-        return translateRecToObj<ClassName>(ORMDatabase::adapter->find(#ClassName, "*","WHERE "+getColumnNameOf_id()+" = " + QString::number(childId)).first()); \
+        int childId = m_adapter->addRecord(#ClassName, values); \
+        return translateRecToObj<ClassName>(m_adapter->find(#ClassName, "*","WHERE "+getColumnNameOf_id()+" = " + QString::number(childId)).first(),m_adapter); \
     } \
     std::shared_ptr<ClassName> get##ClassName##AfterIncludes() const\
     { \
-        return translateRecToObj<ClassName>(m_##ClassName##AfterIncludes); \
+        return translateRecToObj<ClassName>(m_##ClassName##AfterIncludes,m_adapter); \
     } \
     bool remove##ClassName(qlonglong id) \
     { \
-        return ORMDatabase::adapter->setNull(#ClassName, QString("%1_"+getColumnNameOf_id()).arg(getMapDBTableName()), \
+        return m_adapter->setNull(#ClassName, QString("%1_"+getColumnNameOf_id()).arg(getMapDBTableName()), \
             QString("WHERE "+getColumnNameOf_id()+" = '%1'") \
                 .arg(id)); \
     }
@@ -201,6 +202,7 @@ protected:\
     Q_INVOKABLE bool CreateTableWithRelationMethod(##ClassName)()\
     {\
         ClassName _##ClassName##; \
+        _##ClassName##.setAdapter(m_adapter);\
         return _##ClassName##.createTableWithRelation(); \
     }\
 private: \
@@ -218,11 +220,11 @@ private: \
         QString whereString = QString("WHERE %1_"+ QString(idColumnName) +" = %2") \
                                 .arg(getMapDBTableName()) \
                                 .arg(id); \
-        QList<QSqlRecord> list = ORMDatabase::adapter->find( #ClassName, "*", whereString + " " + group.getGroupString() + \
+        QList<QSqlRecord> list = m_adapter->find( #ClassName, "*", whereString + " " + group.getGroupString() + \
                                                             " " + order.getOrderString()); \
         if(!list.isEmpty()) \
             for(int i = 0; i < list.size(); i++) \
-                result.append(translateRecToObj<ClassName>(list.value(i))); \
+                result.append(translateRecToObj<ClassName>(list.value(i),m_adapter)); \
         return result; \
     } \
     void add##ClassName(const qlonglong childId) \
@@ -231,15 +233,15 @@ private: \
             return; \
         QHash<QString, QVariant> hash; \
         hash.insert(QString("%1_"+getColumnNameOf_id()).arg(getMapDBTableName()), QString::number(id)); \
-        ORMDatabase::adapter->updateRecord(#ClassName, childId, hash); \
+        m_adapter->updateRecord(#ClassName, childId, hash); \
     } \
     std::shared_ptr<ClassName> create##ClassName(QHash<QString, QVariant> &values) \
     { \
         if(id < 0) \
             return 0; \
         values.insert(QString("%1_"+getColumnNameOf_id()).arg(getMapDBTableName()), QString::number(id)); \
-        int childId = ORMDatabase::adapter->addRecord(#ClassName, values); \
-        return translateRecToObj<ClassName>(ORMDatabase::adapter->find(#ClassName, "*", "WHERE "+getColumnNameOf_id()+" = " + QString::number(childId)).first()); \
+        int childId = m_adapter->addRecord(#ClassName, values); \
+        return translateRecToObj<ClassName>(m_adapter->find(#ClassName, "*", "WHERE "+getColumnNameOf_id()+" = " + QString::number(childId)).first(),m_adapter); \
     } \
     QList<std::shared_ptr<ClassName>> find##ClassName##Where(ORMWhere where, ORMGroupBy group = ORMGroupBy(), ORMOrderBy order = ORMOrderBy()) \
     { \
@@ -250,29 +252,29 @@ private: \
                                 .arg(getMapDBTableName()) \
                                 .arg(id); \
         whereString += " AND " + where.getWhereString().remove(0, 6); \
-        QList<QSqlRecord> list = ORMDatabase::adapter->find( #ClassName, "*",whereString + " " + group.getGroupString() + \
+        QList<QSqlRecord> list = m_adapter->find( #ClassName, "*",whereString + " " + group.getGroupString() + \
                                                             " " + order.getOrderString()); \
         if(!list.isEmpty()) \
             for(int i = 0; i < list.size(); i++) \
-                result.append(translateRecToObj<ClassName>(list.value(i))); \
+                result.append(translateRecToObj<ClassName>(list.value(i),m_adapter)); \
         return result; \
     } \
     QList<std::shared_ptr<ClassName>> get##ClassName##AfterIncludes() const \
     { \
         QList<std::shared_ptr<ClassName>> list; \
         for(int i = 0; i < m_##ClassName##AfterIncludes.size(); i++) \
-            list.append(translateRecToObj<ClassName>(m_##ClassName##AfterIncludes.value(i))); \
+            list.append(translateRecToObj<ClassName>(m_##ClassName##AfterIncludes.value(i),m_adapter)); \
         return list; \
     } \
     bool remove##ClassName(qlonglong id) \
     { \
-        return ORMDatabase::adapter->setNull(#ClassName, QString("%1_"+getColumnNameOf_id()).arg(getMapDBTableName()), \
+        return m_adapter->setNull(#ClassName, QString("%1_"+getColumnNameOf_id()).arg(getMapDBTableName()), \
             QString("WHERE "+getColumnNameOf_id()+" = '%1'") \
                 .arg(id)); \
     } \
     bool removeAll##ClassName() \
     { \
-        return ORMDatabase::adapter->setNull(#ClassName, QString("%1_"+getColumnNameOf_id()).arg(getMapDBTableName()), \
+        return m_adapter->setNull(#ClassName, QString("%1_"+getColumnNameOf_id()).arg(getMapDBTableName()), \
             QString("WHERE %1_"+getColumnNameOf_id()+" = '%2'") \
                 .arg(getMapDBTableName()) \
                 .arg(id)); \

@@ -8,10 +8,10 @@
 
 #include "../orm4qt_global.h"
 
-class ORM4QT_EXPORT SqlAdapter : public ORMAbstractAdapter
+class SqlAdapter : public ORMAbstractAdapter
 {
 public:
-    SqlAdapter();
+    SqlAdapter(std::shared_ptr<QSqlDatabase> db);
     bool createDatabase(const QString &name);
     bool createTable(const QString &tableName, const QHash<QString, QString> &info);
     bool createTableRelations(const QString &parent, Relation rel, const QString &child);
@@ -28,6 +28,7 @@ public:
     int countBy(const QString &tableName, const QString &params);
     double calculation(Calculation func, const QString &tableName, const QString &fieldName, const QString &params);
     QHash<QString, QList<QSqlRecord> > includes(const QString &parentModel, const QStringList &childModels, const QString &params);
+    void initDB(const QString& name);
 
 protected:
     void fillTableTypes();
