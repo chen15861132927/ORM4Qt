@@ -17,7 +17,7 @@ bool SqliteAdapter::createTable(const QString& tableName, const QHash<QString, Q
 	m_lastQuery.resize(m_lastQuery.size() - 2);
 	m_lastQuery.append(");");
 	m_query.clear();
-	return m_query.exec(m_lastQuery);
+	return m_logger.exec(m_query, m_lastQuery);
 }
 
 int SqliteAdapter::addRecord(const QString& tableName, const QHash<QString, QVariant>& info)
@@ -39,7 +39,7 @@ int SqliteAdapter::addRecord(const QString& tableName, const QHash<QString, QVar
 		m_lastQuery.resize(m_lastQuery.size() - 2);
 		m_lastQuery += ");";
 	}
-	if (m_query.exec(m_lastQuery))
+	if (m_logger.exec(m_query, m_lastQuery))
 		return m_query.lastInsertId().toInt();
 	else
 		return -1;

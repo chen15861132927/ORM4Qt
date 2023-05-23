@@ -13,6 +13,7 @@
 #include <memory>
 #include <qDebug>
 #include <QThread>
+#include "ORMDatabaseFactory.h"
 #if defined(_MSC_VER) && (_MSC_VER >= 1600)    
 # pragma execution_character_set("utf-8")    
 #endif
@@ -45,6 +46,12 @@ public:
 	{
 		id = -1;
 		m_hasUnsavedChanges = false;
+
+		auto defaultdb = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
+		if (defaultdb != nullptr)
+		{
+			setAdapter(defaultdb->getAdapter());
+		}
 	}
 	/*!
 	Creates table associated with model with Relation(one or many).
@@ -460,8 +467,7 @@ public:
 		}
 		foreach(currentModelName, hash.keys())
 		{
-			QString methodName = QString("add%1AfterIncludes")
-				.arg(currentModelName);
+			QString methodName = QString("add%1AfterIncludes").arg(currentModelName);
 			currentList = hash.take(currentModelName);
 			for (int i = 0; i < currentList.size(); i++)
 			{
@@ -529,7 +535,7 @@ public:
 		{
 			QMetaMethod method = metaObject()->method(i);
 			QString methodName = method.name();
-			qDebug() << methodName;
+			//qDebug() << methodName;
 			if (method.name().startsWith(ManyRelation))
 			{
 				QString retVal;

@@ -68,6 +68,10 @@ public:
 	{
 		m_db->setUserName(name);
 	}
+	void setDatabaseName(const QString& name)
+	{
+		m_db->setDatabaseName(name);
+	}
 	void setPassword(const QString& password)
 	{
 		m_db->setPassword(password);
@@ -83,7 +87,7 @@ public:
 		return m_adapter;
 	}
 
-	bool open() 
+	bool open()
 	{
 		return m_db->open();
 	}
@@ -92,7 +96,16 @@ public:
 		m_db->close();
 	}
 
+	bool ORMDatabase::setActiveDatabase(QString dbname)
+	{
+		m_DBName = dbname;
+		bool res = m_adapter->initDB(dbname);
+
+		return res;
+	}
 private:
+	QString m_DBName;
+
 	std::shared_ptr<QSqlDatabase> m_db;
 	std::shared_ptr<ORMAbstractAdapter> m_adapter;
 };

@@ -224,9 +224,10 @@ QHash<QString, QList<QSqlRecord> > SqlAdapter::includes(const QString& parentMod
 		result.insert(childModels.value(i), find(childModels.value(i), "*", whereForChildren));
 	return result;
 }
-void SqlAdapter::initDB(const QString& name)
+bool SqlAdapter::initDB(const QString& name)
 {
-	m_query.exec(QString("USE %1;").arg(name));
+	m_lastQuery = QString("USE %1;").arg(name);
+	return m_logger.exec(m_query, m_lastQuery);
 }
 
 void SqlAdapter::fillTableTypes()

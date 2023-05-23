@@ -1,5 +1,5 @@
 #include "ormlogger.h"
-
+#include <QDebug>
 OrmLogger::OrmLogger() :
 	m_logDeep(ldAll)
 {
@@ -7,23 +7,22 @@ OrmLogger::OrmLogger() :
 
 bool OrmLogger::exec(QSqlQuery query)
 {
-	QTextStream stream(stdout);
 	bool result = query.exec();
 	switch (m_logDeep)
 	{
 		case ldAll:
 		{
-			stream << '[' + QTime::currentTime().toString() + "] " + query.lastQuery() << endl;
+			qDebug() << '[' + QTime::currentTime().toString() + "] " + query.lastQuery() << endl;
 			if (!result)
-				stream << "Warning: " << query.lastError().text() << endl;
+				qDebug() << "Warning: " << query.lastError().text() << endl;
 			break;
 		}
 		case ldWarningsOnly:
 		{
 			if (!result)
 			{
-				stream << '[' + QTime::currentTime().toString() + "] " + query.lastQuery() << endl;
-				stream << "Warning: " << query.lastError().text() << endl;
+				qDebug() << '[' + QTime::currentTime().toString() + "] " + query.lastQuery() << endl;
+				qDebug() << "Warning: " << query.lastError().text() << endl;
 			}
 			break;
 		}
@@ -34,8 +33,28 @@ bool OrmLogger::exec(QSqlQuery query)
 
 bool OrmLogger::exec(QSqlQuery& query, const QString& queryString)
 {
-	query.prepare(queryString);
-	return exec(query);
+	bool result = query.exec(queryString);
+	switch (m_logDeep)
+	{
+		case ldAll:
+		{
+			qDebug() << '[' + QTime::currentTime().toString() + "] " + query.lastQuery() << endl;
+			if (!result)
+				qDebug() << "Warning: " << query.lastError().text() << endl;
+			break;
+		}
+		case ldWarningsOnly:
+		{
+			if (!result)
+			{
+				qDebug() << '[' + QTime::currentTime().toString() + "] " + query.lastQuery() << endl;
+				qDebug() << "Warning: " << query.lastError().text() << endl;
+			}
+			break;
+		}
+		case ldNone: {}
+	}
+	return result;
 }
 
 void OrmLogger::setLogDeep(OrmLogger::LogDeep deep)

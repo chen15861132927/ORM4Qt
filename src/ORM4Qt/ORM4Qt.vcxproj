@@ -86,12 +86,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ORMDatabase.cpp" />
+    <ClCompile Include="ORMDatabaseFactory.cpp" />
     <ClCompile Include="ORMGroupBy.cpp" />
     <ClCompile Include="OrmLogger.cpp" />
     <ClCompile Include="ORMOrderBy.cpp" />
     <ClCompile Include="ORMWhere.cpp" />
     <ClInclude Include="adapters\MySqlAdapter.h" />
     <ClInclude Include="ORMDatabase.h" />
+    <ClInclude Include="ORMDatabaseFactory.h" />
     <ClInclude Include="ORMGroupBy.h" />
     <ClInclude Include="ORMObject.h" />
     <ClInclude Include="ORMOrderBy.h" />

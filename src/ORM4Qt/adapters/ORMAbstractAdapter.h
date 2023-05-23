@@ -47,7 +47,7 @@ public:
 	virtual int countBy(const QString& tableName, const QString& params) = 0;
 	virtual double calculation(Calculation func, const QString& tableName, const QString& fieldName, const QString& params) = 0;
 	virtual QHash<QString, QList<QSqlRecord> > includes(const QString& parentModel, const QStringList& childModels, const QString& params) = 0;
-	virtual void initDB(const QString& name)=0;
+	virtual bool initDB(const QString& name)=0;
 
 	OrmLogger m_logger;
 

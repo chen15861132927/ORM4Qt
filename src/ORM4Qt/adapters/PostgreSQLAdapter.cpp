@@ -14,7 +14,7 @@ bool PostgreSQLAdapter::createTable(const QString& tableName, const QHash<QStrin
 		.arg(name)
 		.arg(m_tableTypes.value(info.value(name)));
 	m_lastQuery += "PRIMARY KEY (" + QString(idColumnName) + "));";
-	return m_query.exec(m_lastQuery);
+	return m_logger.exec(m_query, m_lastQuery);
 }
 
 bool PostgreSQLAdapter::createTableRelations(const QString& parent, ORMAbstractAdapter::Relation rel, const QString& child)
@@ -28,7 +28,7 @@ bool PostgreSQLAdapter::createTableRelations(const QString& parent, ORMAbstractA
 							  "ADD UNIQUE(%2_" + QString(idColumnName) + ");")
 		.arg(child)
 		.arg(parent);
-	return m_query.exec(m_lastQuery);
+	return m_logger.exec(m_query, m_lastQuery);
 }
 
 int PostgreSQLAdapter::addRecord(const QString& tableName, const QHash<QString, QVariant>& info)
@@ -52,7 +52,7 @@ int PostgreSQLAdapter::addRecord(const QString& tableName, const QHash<QString, 
 			m_lastQuery.resize(m_lastQuery.size() - 2);
 		m_lastQuery += ") RETURNING " + QString(idColumnName) + ";";
 	}
-	if (m_query.exec(m_lastQuery))
+	if (m_logger.exec(m_query, m_lastQuery))
 	{
 		m_query.next();
 		return m_query.record().value(0).toInt();

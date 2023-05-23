@@ -5,6 +5,7 @@
 # pragma execution_character_set("utf-8")    
 #endif
 #include "../ORM_Model/ORM_Model.h"
+#include "../../src/ORM4Qt/ORMDatabaseFactory.h"
 int main(int argc, char* argv[])
 {
 	QString dbName = "Test_ORMDatabase";
@@ -13,6 +14,7 @@ int main(int argc, char* argv[])
 	QString hostName = "localhost";
 	QString password = "123456";
 	QCoreApplication a(argc, argv);
+	/*
 	auto db = std::make_shared<ORMDatabase>(driverName);
 	db->setUserName(userName);
 	db->setHostName(hostName);
@@ -37,5 +39,10 @@ int main(int argc, char* argv[])
 		qDebug() << "createTable:" << res;
 
 	}
+	*/
+
+	bool res = ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password);
+	ORM_Model model;
+	res = model.createTableWithRelation();
 	return a.exec();
 }
