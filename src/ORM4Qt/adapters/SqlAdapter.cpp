@@ -1,5 +1,7 @@
 #include "sqladapter.h"
-
+#if defined(_MSC_VER) && (_MSC_VER >= 1600)    
+# pragma execution_character_set("utf-8")    
+#endif
 SqlAdapter::SqlAdapter(std::shared_ptr<QSqlDatabase> db) :ORMAbstractAdapter(db)
 {
 }
@@ -11,7 +13,10 @@ bool SqlAdapter::createDatabase(const QString& name)
 	return exec(m_lastQuery);
 	//return m_query.exec(m_lastQuery);
 }
-
+bool SqlAdapter::alterTable(const QString& tableName, const QHash<QString, QString>& info)
+{
+	return true;
+}
 bool SqlAdapter::createTable(const QString& tableName, const QHash<QString, QString>& info)
 {
 	QString m_lastQuery;
@@ -76,7 +81,11 @@ int SqlAdapter::addRecord(const QString& tableName, const QHash<QString, QVarian
 	if (exec(m_query))
 		return m_query.lastInsertId().toInt();
 	else
+	{
+
 		return -1;
+
+	}
 }
 
 bool SqlAdapter::updateRecord(const QString& tableName, const qlonglong id, const QHash<QString, QVariant>& info)

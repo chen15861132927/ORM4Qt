@@ -33,17 +33,40 @@ TEST(UnitTest_MySQL, test_createTable)
 
 	EXPECT_TRUE(model.createTableWithRelation());
 	EXPECT_EQ(driver.createTableWithRelation(), true);
-
 }
 
+TEST(UnitTest_MySQL, test_alter_Created_Simple_Table)
+{
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
+	auto db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
+	auto ress = db->dropDatabase(dbName);
+	ORMDatabaseFactory::getInstance()->closeAndClearAllDatabase();
+
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
+	db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
+
+	QString oldcreateSQL = "CREATE TABLE if not exists ORM_Model(id BIGINT AUTO_INCREMENT, namedouble int, nameTime TIME, nameString TEXT, nameLonglong long, m_Priority INT, nameUlonglong BIGINT UNSIGNED, nameDatetime DATETIME, m_SafeHardware INT, nameDate DATE, nameUint INT UNSIGNED, nameChar CHAR(1), nameInt INT, PRIMARY KEY(id));";
+	db->getAdapter()->exec(oldcreateSQL);
+	ORM_Model model;
+	ASSERT_ANY_THROW(model.createTableWithRelation());
+	ASSERT_NO_THROW(model.alterTable());
+
+}
 TEST(UnitTest_MySQL, test_save)
 {
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
 	auto db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
+	auto ress = db->dropDatabase(dbName);
+	ORMDatabaseFactory::getInstance()->closeAndClearAllDatabase();
+
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
+	db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
+
 
 	db->getAdapter()->exec("DELETE FROM ORM_Model;");
 	QTime time = QTime::currentTime();
 	ORM_Model model;
-
+	model.createTableWithRelation();
 	/*model.setMapDBTableName(model.metaObject()->className() + QString("TBName"));
 	*/
 	model.setnameBool(true);
@@ -74,18 +97,17 @@ TEST(UnitTest_MySQL, test_save)
 
 TEST(UnitTest_MySQL, test_ORM_HAS_ONE)
 {
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
 	auto db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
+	auto ress = db->dropDatabase(dbName);
+	ORMDatabaseFactory::getInstance()->closeAndClearAllDatabase();
 
-	db->getAdapter()->exec("DELETE FROM Car;");
-	std::cout << "Warning: " << db->getAdapter()->lastError().text().toStdString() << endl;
-	db->getAdapter()->exec("DELETE FROM DriverLicense;");
-
-	db->getAdapter()->exec("DELETE FROM CarDriver;");
-	std::cout << "Warning: " << db->getAdapter()->lastError().text().toStdString() << endl;
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
+	db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
 
 	CarDriver driver1, driver2;
 	DriverLicense license;
-
+	driver1.createTableWithRelation();
 	/*driver1.setMapDBTableName(driver1.metaObject()->className() + QString("TBName"));
 	driver2.setMapDBTableName(driver2.metaObject()->className() + QString("TBName"));
 	license.setMapDBTableName(license.metaObject()->className() + QString("TBName"));*/
@@ -100,7 +122,9 @@ TEST(UnitTest_MySQL, test_ORM_HAS_ONE)
 	EXPECT_TRUE(driver1.getDriverLicense() == 0);
 	QHash<QString, QVariant> info;
 	info.insert("Number", 123);
-	EXPECT_EQ((pointer = driver1.createDriverLicense(info))->getNumber(), 123);
+	pointer = driver1.createDriverLicense(info);
+	EXPECT_NE(pointer, nullptr);
+	EXPECT_EQ(pointer->getNumber(), 123);
 	EXPECT_EQ((pointer = driver1.getDriverLicense())->getNumber(), 123);
 	EXPECT_TRUE(driver2.getDriverLicense() == 0);
 	license.setNumber(456);
@@ -117,17 +141,17 @@ TEST(UnitTest_MySQL, test_ORM_HAS_ONE)
 
 TEST(UnitTest_MySQL, test_ORM_HAS_MANY)
 {
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
 	auto db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
+	auto ress = db->dropDatabase(dbName);
+	ORMDatabaseFactory::getInstance()->closeAndClearAllDatabase();
 
-	db->getAdapter()->exec("DELETE FROM Car;");
-	std::cout << "Warning: " << db->getAdapter()->lastError().text().toStdString() << endl;
-	db->getAdapter()->exec("DELETE FROM DriverLicense;");
-
-	db->getAdapter()->exec("DELETE FROM CarDriver;");
-	std::cout << "Warning: " << db->getAdapter()->lastError().text().toStdString() << endl;
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
+	db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
 
 	CarDriver driver1, driver2;
 	Car car1, car2, car3;
+	driver1.createTableWithRelation();
 
 	/*driver1.setMapDBTableName(driver1.metaObject()->className() + QString("TBName"));
 	driver2.setMapDBTableName(driver2.metaObject()->className() + QString("TBName"));
@@ -201,19 +225,18 @@ TEST(UnitTest_MySQL, test_ORM_HAS_MANY)
 
 TEST(UnitTest_MySQL, test_includes)
 {
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
 	auto db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
+	auto ress = db->dropDatabase(dbName);
+	ORMDatabaseFactory::getInstance()->closeAndClearAllDatabase();
 
-	db->getAdapter()->exec("DELETE FROM Car;");
-	std::cout << "Warning: " << db->getAdapter()->lastError().text().toStdString() << endl;
-	db->getAdapter()->exec("DELETE FROM DriverLicense;");
-
-	db->getAdapter()->exec("DELETE FROM CarDriver;");
-	std::cout << "Warning: " << db->getAdapter()->lastError().text().toStdString() << endl;
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
+	db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
 
 	Car car1, car2, car3;
 	DriverLicense license1, license2;
 	CarDriver driver1, driver2;
-
+	driver1.createTableWithRelation();
 	/*license1.setMapDBTableName(driver1.metaObject()->className() + QString("TBName"));
 	license2.setMapDBTableName(driver2.metaObject()->className() + QString("TBName"));
 	driver1.setMapDBTableName(driver1.metaObject()->className() + QString("TBName"));
@@ -273,11 +296,17 @@ TEST(UnitTest_MySQL, test_includes)
 
 TEST(UnitTest_MySQL, test_pluck)
 {
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
 	auto db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
+	auto ress = db->dropDatabase(dbName);
+	ORMDatabaseFactory::getInstance()->closeAndClearAllDatabase();
 
-	db->getAdapter()->exec("DELETE FROM ORM_Model;");
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
+	db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
+
 
 	ORM_Model model1, model2, model3;
+	model1.createTableWithRelation();
 	/*model1.setMapDBTableName(model1.metaObject()->className() + QString("TBName"));
 	model2.setMapDBTableName(model2.metaObject()->className() + QString("TBName"));
 	model3.setMapDBTableName(model3.metaObject()->className() + QString("TBName"));*/

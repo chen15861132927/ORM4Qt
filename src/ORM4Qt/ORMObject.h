@@ -99,6 +99,60 @@ public:
 		return res;
 	}
 
+	bool alterTable()
+	{
+		QHash<QString, QString> info; //QHash<name, type>
+		for (int i = metaObject()->propertyOffset(); i < metaObject()->propertyCount(); i++)
+		{
+			auto pro = metaObject()->property(i);
+			if (pro.isEnumType())
+			{
+				info.insert(pro.name(), "int");
+			}
+			else
+			{
+				info.insert(pro.name(), pro.typeName());
+			}
+		}
+
+		bool res = false;
+		try
+		{
+			res = alertTableNoRelation();
+		}
+		catch (std::exception ex)
+		{
+			qDebug(ex.what());
+			res = false;
+		}
+
+		//父表不成功,子表依然需要修改
+		if (res)
+		{
+			LoadCurrentTableRelations();
+
+			for (QString item : m_oneRelations)
+			{
+				bool itemres = true;
+
+				QString methodName = QString("alter%1Table").arg(item);
+				QMetaObject::invokeMethod(this, qPrintable(methodName), Qt::DirectConnection, Q_RETURN_ARG(bool, itemres));
+				res = res & itemres & createTableRelation(ORMAbstractAdapter::Relation::HasOne, item);
+
+			}
+
+			for (QString item : m_manyRelations)
+			{
+				bool itemres = true;
+
+				QString methodName = QString("alter%1Table").arg(item);
+				QMetaObject::invokeMethod(this, qPrintable(methodName), Qt::DirectConnection, Q_RETURN_ARG(bool, itemres));
+				res = res & itemres & createTableRelation(ORMAbstractAdapter::Relation::HasOne, item);
+
+			}
+		}
+		return res;
+	}
 	/*!
 	   Creates table relation \a rel to child model \a childModelName.
 
@@ -612,6 +666,28 @@ private:
 		return m_adapter->createTable(getMapDBTableName(), info);
 	}
 
+	bool alertTableNoRelation()
+	{
+		QHash<QString, QString> info; //QHash<name, type>
+		for (int i = metaObject()->propertyOffset(); i < metaObject()->propertyCount(); i++)
+		{
+			auto pro = metaObject()->property(i);
+			if (pro.isEnumType())
+			{
+				info.insert(pro.name(), "int");
+			}
+			else
+			{
+				info.insert(pro.name(), pro.typeName());
+			}
+		}
+
+		bool res = false;
+
+		res = m_adapter->alterTable(getMapDBTableName(), info);
+
+		return res;
+	}
 	mutable QString m_mapDBTableName = "";
 
 	bool m_isSettingTableNameBySelf = false;

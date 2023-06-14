@@ -1,5 +1,7 @@
 #include "mysqladapter.h"
-
+#if defined(_MSC_VER) && (_MSC_VER >= 1600)    
+# pragma execution_character_set("utf-8")    
+#endif
 MySqlAdapter::MySqlAdapter(std::shared_ptr<QSqlDatabase> db) :SqlAdapter(db)
 {
 	fillTableTypes();
@@ -114,6 +116,73 @@ bool MySqlAdapter::createTable(const QString& tableName, const QHash<QString, QS
 	return res;
 }
 
+bool MySqlAdapter::alterTable(const QString& tableName, const QHash<QString, QString>& info)
+{
+	bool res = true;
+	QString name;
+ 	exec(QString("SHOW TABLES LIKE '%1';").arg(tableName));
+	if (m_query.next())
+	{
+		QHash<QString, QString> databaseColumns = getTableColumns(tableName);
+
+		QHash<QString, QString>::iterator i;
+		for (auto i = info.begin(); i != info.end(); ++i)
+		{
+			QString columnName = i.key();
+			QString dataType = m_tableTypes.value(i.value());
+
+			if (!databaseColumns.contains(columnName))
+			{
+				// Add the column
+				QString addColumnSql = "ALTER TABLE " + tableName + " ADD COLUMN " + columnName + " " + dataType;
+				res = res & exec(addColumnSql);
+			}
+			else if (databaseColumns[columnName].toLower() != dataType.toLower())
+			{
+				// Update the column type
+				QString updateColumnSql = "ALTER TABLE " + tableName + " MODIFY COLUMN " + columnName + " " + dataType;
+				res = res & exec(updateColumnSql);
+			}
+		}
+		QStringList matchtableError;
+		matchtableError << tableName;
+		databaseColumns = getTableColumns(tableName);
+
+		for (auto i = databaseColumns.begin(); i != databaseColumns.end(); ++i)
+		{
+			QString columnName = i.key();
+
+			//id为每个表的自增id,_id为外键表id.不用比较
+			if (columnName.toLower() == "id" || columnName.toLower().contains("_id"))
+			{
+				continue;
+			}
+			else if (!info.contains(columnName))
+			{
+				matchtableError << "程序中没有字段" << columnName << "类型" << "\n";
+			}
+			else
+			{
+				QString dataType = m_tableTypes.value(info[columnName]);
+				QString dbColumnType = i.value();
+				if (i.value().toLower() != dataType.toLower())
+				{
+					matchtableError << "程序中字段" << columnName << "类型不匹配" << info[columnName] << "--" << dataType << "\n";
+				}
+			}
+		}
+		m_query.clear();
+		if (matchtableError.count() > 1)
+		{
+			throw std::exception(qPrintable(matchtableError.join(" ") + "以上需要人工处理!!!!!!"));
+		}
+	}
+	else
+	{
+		throw std::exception(qPrintable(QString("未查询到%1表").arg(tableName)));
+	}
+	return res;
+}
 bool MySqlAdapter::createTableRelations(const QString& parent, ORMAbstractAdapter::Relation rel, const QString& child)
 {
 	QString sql = QString("select * from information_schema.TABLE_CONSTRAINTS t ") +
@@ -175,4 +244,17 @@ bool MySqlAdapter::initDB(const QString& name)
 		result = exec(sql);
 	}
 	return result;
+}
+int MySqlAdapter::addRecord(const QString& tableName, const QHash<QString, QVariant>& info)
+{
+	int baseresult = SqlAdapter::addRecord(tableName, info);
+	if (baseresult <=0)
+	{
+		exec(QString("SHOW TABLES LIKE '%1';").arg(tableName));
+		if (!m_query.next())
+		{
+			throw std::exception(qPrintable(QString("未查询到%1表").arg(tableName)));
+		}
+		return baseresult;
+	}
 }

@@ -26,6 +26,7 @@ public:
 	};
 
 	bool exec(const QString& sql);
+	virtual bool alterTable(const QString& tableName, const QHash<QString, QString>& info)=0;
 
 	virtual bool createDatabase(const QString& name) = 0;
 	virtual bool createTable(const QString& tableName, const QHash<QString, QString>& info) = 0;

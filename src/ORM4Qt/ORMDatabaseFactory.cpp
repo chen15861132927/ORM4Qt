@@ -22,6 +22,10 @@ ORMDatabaseFactory::~ORMDatabaseFactory()
 /// <returns></returns>
 bool ORMDatabaseFactory::registerDatabase(QString DBname, QString hostName, QString userName, QString password)
 {
+	if (m_dbs.contains(DBname))
+	{
+		return true;
+	}
 	std::shared_ptr<ORMDatabase> db = std::make_shared<ORMDatabase>("QMYSQL");
 	db->setHostName(hostName);
 	db->setUserName(userName);

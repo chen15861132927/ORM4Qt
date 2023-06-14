@@ -22,7 +22,6 @@ bool ORMDatabase::createDatabase(QString name)
 
 bool ORMDatabase::dropDatabase(QString name)
 {
-
 	return m_adapter->dropDatabase(name);
 }
 

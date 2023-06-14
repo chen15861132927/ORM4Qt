@@ -13,6 +13,8 @@ class SqlAdapter : public ORMAbstractAdapter
 public:
     SqlAdapter(std::shared_ptr<QSqlDatabase> db);
     bool createDatabase(const QString &name);
+    bool alterTable(const QString& tableName, const QHash<QString, QString>& info);
+
     bool createTable(const QString &tableName, const QHash<QString, QString> &info);
     bool createTableRelations(const QString &parent, Relation rel, const QString &child);
     bool dropTable(const QString &tableName);

@@ -151,7 +151,12 @@ private: \
         return m_adapter->setNull(#ClassName, QString("%1_"+getColumnNameOf_id()).arg(getMapDBTableName()), \
             QString("WHERE "+getColumnNameOf_id()+" = '%1'") \
                 .arg(id)); \
-    }
+    }\
+	Q_INVOKABLE bool alter##ClassName##Table()\
+	{\
+		ClassName _##ClassName##;\
+		return _##ClassName##.alterTable();\
+	}
 
   /*!
 	 \def ORM_HAS_MANY(ClassName)
@@ -278,4 +283,9 @@ private: \
             QString("WHERE %1_"+getColumnNameOf_id()+" = '%2'") \
                 .arg(getMapDBTableName()) \
                 .arg(id)); \
+    }\
+    Q_INVOKABLE bool alter##ClassName##Table()\
+    {\
+        ClassName _##ClassName##; \
+        return _##ClassName##.alterTable(); \
     }
