@@ -7,52 +7,54 @@ PostgreSQLAdapter::PostgreSQLAdapter(std::shared_ptr<QSqlDatabase> db) :SqlAdapt
 bool PostgreSQLAdapter::createTable(const QString& tableName, const QHash<QString, QString>& info)
 {
 	QString name;
-	m_lastQuery = QString("CREATE TABLE %1(" + QString(idColumnName) + " BIGSERIAL, ")
+	auto m_lastQuery = QString("CREATE TABLE %1(" + QString(idColumnName) + " BIGSERIAL, ")
 		.arg(tableName);
 	foreach(name, info.keys())
 		m_lastQuery += QString("%1 %2, ")
 		.arg(name)
 		.arg(m_tableTypes.value(info.value(name)));
 	m_lastQuery += "PRIMARY KEY (" + QString(idColumnName) + "));";
-	return m_logger.exec(m_query, m_lastQuery);
+	return exec(m_lastQuery);
 }
 
 bool PostgreSQLAdapter::createTableRelations(const QString& parent, ORMAbstractAdapter::Relation rel, const QString& child)
 {
+	QString sql;
 	if (rel == HasMany)
-		m_lastQuery = QString("ALTER TABLE %1 ADD %2_" + QString(idColumnName) + " BIGINT, ADD FOREIGN KEY(%2_" + QString(idColumnName) + ") REFERENCES %2(" + QString(idColumnName) + ");")
+		sql = QString("ALTER TABLE %1 ADD %2_" + QString(idColumnName) + " BIGINT, ADD FOREIGN KEY(%2_" + QString(idColumnName) + ") REFERENCES %2(" + QString(idColumnName) + ");")
 		.arg(child)
 		.arg(parent);
 	else if (rel == HasOne)
-		m_lastQuery = QString("ALTER TABLE %1 ADD %2_" + QString(idColumnName) + " BIGINT, ADD FOREIGN KEY(%2_" + QString(idColumnName) + ") REFERENCES %2(" + QString(idColumnName) + "),"
-							  "ADD UNIQUE(%2_" + QString(idColumnName) + ");")
+		sql = QString("ALTER TABLE %1 ADD %2_" + QString(idColumnName) + " BIGINT, ADD FOREIGN KEY(%2_" + QString(idColumnName) + ") REFERENCES %2(" + QString(idColumnName) + "),"
+					  "ADD UNIQUE(%2_" + QString(idColumnName) + ");")
 		.arg(child)
 		.arg(parent);
-	return m_logger.exec(m_query, m_lastQuery);
+	return exec(sql);
 }
 
 int PostgreSQLAdapter::addRecord(const QString& tableName, const QHash<QString, QVariant>& info)
 {
 	QString key;
+	QString sql;
 	if (info.isEmpty())
-		m_lastQuery = QString("INSERT INTO %1 DEFAULT VALUES RETURNING " + QString(idColumnName) + ";")
+		sql = QString("INSERT INTO %1 DEFAULT VALUES RETURNING " + QString(idColumnName) + ";")
 		.arg(tableName);
 	else
 	{
-		m_lastQuery = QString("INSERT INTO %1(")
+		sql = QString("INSERT INTO %1(")
 			.arg(tableName);
 		foreach(key, info.keys())
-			m_lastQuery += key + ", ";
+			sql += key + ", ";
 		if (!info.isEmpty())
-			m_lastQuery.resize(m_lastQuery.size() - 2);
-		m_lastQuery += ") VALUES(";
+			sql.resize(sql.size() - 2);
+		sql += ") VALUES(";
 		foreach(key, info.keys())
-			m_lastQuery += "'" + info.value(key).toString() + "', ";
+			sql += "'" + info.value(key).toString() + "', ";
 		if (!info.isEmpty())
-			m_lastQuery.resize(m_lastQuery.size() - 2);
-		m_lastQuery += ") RETURNING " + QString(idColumnName) + ";";
+			sql.resize(sql.size() - 2);
+		sql += ") RETURNING " + QString(idColumnName) + ";";
 	}
-	if (m_logger.exec(m_query, m_lastQuery))
+	if (exec( sql))
 	{
 		m_query.next();
 		return m_query.record().value(0).toInt();

@@ -24,3 +24,14 @@ bool ORMAbstractAdapter::exec(const QString& query)
 {
 	return m_logger.exec(m_query, query);
 }
+
+bool ORMAbstractAdapter::exec(QSqlQuery& query)
+{
+	return m_logger.exec(m_query);
+
+}
+
+void ORMAbstractAdapter::setLogDeep(OrmLogger::LogDeep deep)
+{
+	m_logger.setLogDeep(deep);
+}

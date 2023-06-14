@@ -33,5 +33,5 @@ QString ORMDatabase::lastQuery() const
 
 void ORMDatabase::setLogDeep(OrmLogger::LogDeep deep)
 {
-	m_adapter->m_logger.setLogDeep(deep);
+	m_adapter->setLogDeep(deep);
 }

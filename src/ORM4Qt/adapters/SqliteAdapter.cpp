@@ -8,7 +8,7 @@ SqliteAdapter::SqliteAdapter(std::shared_ptr<QSqlDatabase> db) :SqlAdapter(db)
 bool SqliteAdapter::createTable(const QString& tableName, const QHash<QString, QString>& info)
 {
 	QString name;
-	m_lastQuery = QString("CREATE TABLE %1(" + QString(idColumnName) + " INTEGER PRIMARY KEY, ")
+	auto m_lastQuery = QString("CREATE TABLE %1(" + QString(idColumnName) + " INTEGER PRIMARY KEY, ")
 		.arg(tableName);
 	foreach(name, info.keys())
 		m_lastQuery += QString("%1 %2, ")
@@ -17,11 +17,12 @@ bool SqliteAdapter::createTable(const QString& tableName, const QHash<QString, Q
 	m_lastQuery.resize(m_lastQuery.size() - 2);
 	m_lastQuery.append(");");
 	m_query.clear();
-	return m_logger.exec(m_query, m_lastQuery);
+	return exec(m_lastQuery);
 }
 
 int SqliteAdapter::addRecord(const QString& tableName, const QHash<QString, QVariant>& info)
 {
+	QString m_lastQuery;
 	QString key;
 	if (info.isEmpty())
 		m_lastQuery = QString("INSERT INTO %1 DEFAULT VALUES;")
@@ -39,7 +40,7 @@ int SqliteAdapter::addRecord(const QString& tableName, const QHash<QString, QVar
 		m_lastQuery.resize(m_lastQuery.size() - 2);
 		m_lastQuery += ");";
 	}
-	if (m_logger.exec(m_query, m_lastQuery))
+	if (exec(m_lastQuery))
 		return m_query.lastInsertId().toInt();
 	else
 		return -1;

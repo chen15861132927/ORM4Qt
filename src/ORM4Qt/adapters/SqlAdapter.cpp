@@ -6,14 +6,16 @@ SqlAdapter::SqlAdapter(std::shared_ptr<QSqlDatabase> db) :ORMAbstractAdapter(db)
 
 bool SqlAdapter::createDatabase(const QString& name)
 {
-	m_lastQuery = QString("CREATE DATABASE %1;")
+	auto m_lastQuery = QString("CREATE DATABASE %1;")
 		.arg(name);
-	return m_logger.exec(m_query, m_lastQuery);
+	return exec(m_lastQuery);
 	//return m_query.exec(m_lastQuery);
 }
 
 bool SqlAdapter::createTable(const QString& tableName, const QHash<QString, QString>& info)
 {
+	QString m_lastQuery;
+
 	QString name;
 	m_lastQuery = QString("CREATE TABLE %1(" + QString(idColumnName) + " BIGINT, ")
 		.arg(tableName);
@@ -22,40 +24,41 @@ bool SqlAdapter::createTable(const QString& tableName, const QHash<QString, QStr
 		.arg(name)
 		.arg(m_tableTypes.value(info.value(name)));
 	m_lastQuery += "PRIMARY KEY (" + QString(idColumnName) + "));";
-	return m_logger.exec(m_query, m_lastQuery);
+	return exec(m_lastQuery);
 	//return m_query.exec(m_lastQuery);
 }
 
 bool SqlAdapter::createTableRelations(const QString& parent, Relation rel, const QString& child)
 {
+	QString m_lastQuery;
 	if (rel == HasOne || rel == HasMany)
 		m_lastQuery = QString("ALTER TABLE %1 ADD %2_" + QString(idColumnName) + " INTEGER;")
 		.arg(child)
 		.arg(parent);
-	return m_logger.exec(m_query, m_lastQuery);
+	return exec(m_lastQuery);
 	//return m_query.exec(m_lastQuery);
 }
 
 bool SqlAdapter::dropTable(const QString& tableName)
 {
-	m_lastQuery = QString("DROP TABLE %1;")
+	auto m_lastQuery = QString("DROP TABLE %1;")
 		.arg(tableName);
-	return m_logger.exec(m_query, m_lastQuery);
+	return exec(m_lastQuery);
 	//return m_query.exec(m_lastQuery);
 }
 
 bool SqlAdapter::dropDatabase(const QString& name)
 {
-	m_lastQuery = QString("DROP DATABASE %1;")
+	auto m_lastQuery = QString("DROP DATABASE %1;")
 		.arg(name);
-	return m_logger.exec(m_query, m_lastQuery);
+	return exec(m_lastQuery);
 	//return m_query.exec(m_lastQuery);
 }
 
 int SqlAdapter::addRecord(const QString& tableName, const QHash<QString, QVariant>& info)
 {
 	QString key, fields, values;
-	m_lastQuery = QString("INSERT INTO %1(%2) VALUES(%3);");
+	auto m_lastQuery = QString("INSERT INTO %1(%2) VALUES(%3);");
 	foreach(key, info.keys())
 	{
 		fields += key + ", ";
@@ -70,7 +73,7 @@ int SqlAdapter::addRecord(const QString& tableName, const QHash<QString, QVarian
 	m_query.prepare(m_lastQuery);
 	foreach(key, info.keys())
 		m_query.bindValue(":" + key, info.value(key));
-	if (m_logger.exec(m_query))
+	if (exec(m_query))
 		return m_query.lastInsertId().toInt();
 	else
 		return -1;
@@ -78,7 +81,7 @@ int SqlAdapter::addRecord(const QString& tableName, const QHash<QString, QVarian
 
 bool SqlAdapter::updateRecord(const QString& tableName, const qlonglong id, const QHash<QString, QVariant>& info)
 {
-	m_lastQuery = QString("UPDATE %1 SET ")
+	auto m_lastQuery = QString("UPDATE %1 SET ")
 		.arg(tableName);
 	QString fieldName;
 	foreach(fieldName, info.keys())
@@ -93,18 +96,18 @@ bool SqlAdapter::updateRecord(const QString& tableName, const qlonglong id, cons
 	m_lastQuery.resize(m_lastQuery.size() - 2);
 	m_lastQuery += QString(" WHERE " + QString(idColumnName) + " = %1;")
 		.arg(id);
-	return m_logger.exec(m_query, m_lastQuery);
+	return exec(m_lastQuery);
 	//return m_query.exec(m_lastQuery);
 }
 
 QList<QSqlRecord> SqlAdapter::find(const QString& tableName, const QString& fieldName, const QString& params)
 {
 	QList<QSqlRecord> result;
-	m_lastQuery = QString("SELECT %1 FROM %2 %3;")
+	auto m_lastQuery = QString("SELECT %1 FROM %2 %3;")
 		.arg(fieldName)
 		.arg(tableName)
 		.arg(params);
-	if (m_logger.exec(m_query, m_lastQuery))
+	if (exec(m_lastQuery))
 		while (m_query.next())
 			result.append(m_query.record());
 	return result;
@@ -112,9 +115,9 @@ QList<QSqlRecord> SqlAdapter::find(const QString& tableName, const QString& fiel
 
 QSqlRecord SqlAdapter::first(const QString& tableName)
 {
-	m_lastQuery = QString("SELECT * FROM %1 ORDER BY " + QString(idColumnName) + " ASC LIMIT 1;")
+	auto m_lastQuery = QString("SELECT * FROM %1 ORDER BY " + QString(idColumnName) + " ASC LIMIT 1;")
 		.arg(tableName);
-	m_logger.exec(m_query, m_lastQuery);
+	exec(m_lastQuery);
 	//m_query.exec(m_lastQuery);
 	m_query.next();
 	return m_query.record();
@@ -122,9 +125,9 @@ QSqlRecord SqlAdapter::first(const QString& tableName)
 
 QSqlRecord SqlAdapter::last(const QString& tableName)
 {
-	m_lastQuery = QString("SELECT * FROM %1 ORDER BY " + QString(idColumnName) + " DESC LIMIT 1;")
+	auto m_lastQuery = QString("SELECT * FROM %1 ORDER BY " + QString(idColumnName) + " DESC LIMIT 1;")
 		.arg(tableName);
-	m_logger.exec(m_query, m_lastQuery);
+	exec(m_lastQuery);
 	//m_query.exec(m_lastQuery;)
 	m_query.next();
 	return m_query.record();
@@ -132,29 +135,29 @@ QSqlRecord SqlAdapter::last(const QString& tableName)
 
 bool SqlAdapter::setNull(const QString& tableName, const QString& fieldName, const QString& params)
 {
-	m_lastQuery = QString("UPDATE %1 SET %2 = NULL %3;")
+	auto m_lastQuery = QString("UPDATE %1 SET %2 = NULL %3;")
 		.arg(tableName)
 		.arg(fieldName)
 		.arg(params);
-	return m_logger.exec(m_query, m_lastQuery);
+	return exec(m_lastQuery);
 	//return m_query.exec(m_lastQuery);
 }
 
 bool SqlAdapter::remove(const QString& tableName, const QString& params)
 {
-	m_lastQuery = QString("DELETE FROM %1 %2;")
+	auto m_lastQuery = QString("DELETE FROM %1 %2;")
 		.arg(tableName)
 		.arg(params);
-	return m_logger.exec(m_query, m_lastQuery);
+	return exec(m_lastQuery);
 	//return m_query.exec(m_lastQuery);
 }
 
 int SqlAdapter::count(const QString& tableName, const QString& arg)
 {
-	m_lastQuery = QString("SELECT COUNT(%1) FROM %2;")
+	auto m_lastQuery = QString("SELECT COUNT(%1) FROM %2;")
 		.arg(arg)
 		.arg(tableName);
-	if (m_logger.exec(m_query, m_lastQuery))
+	if (exec(m_lastQuery))
 	{
 		m_query.next();
 		return m_query.value(0).toInt();
@@ -165,10 +168,10 @@ int SqlAdapter::count(const QString& tableName, const QString& arg)
 
 int SqlAdapter::countBy(const QString& tableName, const QString& params)
 {
-	m_lastQuery = QString("SELECT COUNT(*) FROM %1 %2;")
+	auto m_lastQuery = QString("SELECT COUNT(*) FROM %1 %2;")
 		.arg(tableName)
 		.arg(params);
-	if (m_logger.exec(m_query, m_lastQuery))
+	if (exec(m_lastQuery))
 	{
 		m_query.next();
 		return m_query.value(0).toInt();
@@ -198,12 +201,12 @@ double SqlAdapter::calculation(ORMAbstractAdapter::Calculation func, const QStri
 		default:
 			return 0;
 	}
-	m_lastQuery = QString("SELECT %1(%2) FROM %3 %4;")
+	auto m_lastQuery = QString("SELECT %1(%2) FROM %3 %4;")
 		.arg(funcName)
 		.arg(fieldName)
 		.arg(tableName)
 		.arg(params);
-	m_logger.exec(m_query, m_lastQuery);
+	exec(m_lastQuery);
 	//m_query.exec(m_lastQuery);
 	m_query.next();
 	return m_query.value(0).toDouble();
@@ -226,8 +229,8 @@ QHash<QString, QList<QSqlRecord> > SqlAdapter::includes(const QString& parentMod
 }
 bool SqlAdapter::initDB(const QString& name)
 {
-	m_lastQuery = QString("USE %1;").arg(name);
-	return m_logger.exec(m_query, m_lastQuery);
+	auto m_lastQuery = QString("USE %1;").arg(name);
+	return exec(m_lastQuery);
 }
 
 void SqlAdapter::fillTableTypes()

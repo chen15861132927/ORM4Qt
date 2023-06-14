@@ -24,7 +24,9 @@ public:
 		HasOne,
 		HasMany
 	};
-	bool exec(const QString& query);
+
+	bool exec(const QString& sql);
+
 	virtual bool createDatabase(const QString& name) = 0;
 	virtual bool createTable(const QString& tableName, const QHash<QString, QString>& info) = 0;
 	virtual bool createTableRelations(const QString& parent, Relation rel, const QString& child) = 0;
@@ -48,13 +50,18 @@ public:
 	virtual double calculation(Calculation func, const QString& tableName, const QString& fieldName, const QString& params) = 0;
 	virtual QHash<QString, QList<QSqlRecord> > includes(const QString& parentModel, const QStringList& childModels, const QString& params) = 0;
 	virtual bool initDB(const QString& name)=0;
-
-	OrmLogger m_logger;
-
+	void setLogDeep(OrmLogger::LogDeep deep);
 protected:
 	QHash<QString, QString> m_tableTypes;
 	QSqlQuery m_query;
-	QString m_lastQuery;
 	virtual void fillTableTypes() = 0;
+	bool exec(QSqlQuery& query);
+	QString m_DBName;
+
+private:
+	OrmLogger m_logger;
+	QString m_lastQuery;
+
+
 };
 
