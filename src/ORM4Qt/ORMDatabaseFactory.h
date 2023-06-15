@@ -38,6 +38,8 @@ public:
 
 	void closeAndClearAllDatabase();
 
+	bool dropDatabase(QString DBname);
+	void RemoveFromFactory(QString DBname);
 
 private:
 	ORMDatabaseFactory();

@@ -3,7 +3,8 @@ std::shared_ptr<ORMDatabaseFactory> ORMDatabaseFactory::m_instance = {};
 
 std::once_flag ORMDatabaseFactory::s_flag;
 
-ORMDatabaseFactory::ORMDatabaseFactory() {
+ORMDatabaseFactory::ORMDatabaseFactory()
+{
 }
 
 ORMDatabaseFactory::~ORMDatabaseFactory()
@@ -95,3 +96,24 @@ void ORMDatabaseFactory::closeAndClearAllDatabase()
 	}
 	m_dbs.clear();
 }
+
+bool ORMDatabaseFactory::dropDatabase(QString DBname)
+{
+	bool res = false;
+	if (m_dbs.find(DBname) != m_dbs.end())
+	{
+		res = m_dbs[DBname]->dropDatabase(DBname);
+		m_dbs.remove(DBname);
+	}
+	return res;
+}
+
+void ORMDatabaseFactory::RemoveFromFactory(QString DBname)
+{
+	if (m_dbs.find(DBname) != m_dbs.end())
+	{
+		m_dbs.remove(DBname);
+	}
+}
+
+

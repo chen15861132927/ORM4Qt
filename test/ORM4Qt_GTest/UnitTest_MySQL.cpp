@@ -11,14 +11,9 @@ QString password = "123456";
 
 TEST(UnitTest_MySQL, test_createTable)
 {
-
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
-	auto db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
-	auto ress = db->dropDatabase(dbName);
-	ORMDatabaseFactory::getInstance()->closeAndClearAllDatabase();
-
+	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
-
 
 	ORM_Model model;
 	CarDriver driver;
@@ -38,12 +33,10 @@ TEST(UnitTest_MySQL, test_createTable)
 TEST(UnitTest_MySQL, test_alter_Created_Simple_Table)
 {
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
-	auto db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
-	auto ress = db->dropDatabase(dbName);
-	ORMDatabaseFactory::getInstance()->closeAndClearAllDatabase();
-
+	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
-	db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
+
+	auto db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
 
 	QString oldcreateSQL = "CREATE TABLE if not exists ORM_Model(id BIGINT AUTO_INCREMENT, namedouble int, nameTime TIME, nameString TEXT, nameLonglong long, m_Priority INT, nameUlonglong BIGINT UNSIGNED, nameDatetime DATETIME, m_SafeHardware INT, nameDate DATE, nameUint INT UNSIGNED, nameChar CHAR(1), nameInt INT, PRIMARY KEY(id));";
 	db->getAdapter()->exec(oldcreateSQL);
@@ -55,15 +48,11 @@ TEST(UnitTest_MySQL, test_alter_Created_Simple_Table)
 TEST(UnitTest_MySQL, test_save)
 {
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
-	auto db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
-	auto ress = db->dropDatabase(dbName);
-	ORMDatabaseFactory::getInstance()->closeAndClearAllDatabase();
-
+	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
-	db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
 
+	auto db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
 
-	db->getAdapter()->exec("DELETE FROM ORM_Model;");
 	QTime time = QTime::currentTime();
 	ORM_Model model;
 	model.createTableWithRelation();
@@ -98,12 +87,9 @@ TEST(UnitTest_MySQL, test_save)
 TEST(UnitTest_MySQL, test_ORM_HAS_ONE)
 {
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
-	auto db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
-	auto ress = db->dropDatabase(dbName);
-	ORMDatabaseFactory::getInstance()->closeAndClearAllDatabase();
-
+	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
-	db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
+
 
 	CarDriver driver1, driver2;
 	DriverLicense license;
@@ -142,12 +128,10 @@ TEST(UnitTest_MySQL, test_ORM_HAS_ONE)
 TEST(UnitTest_MySQL, test_ORM_HAS_MANY)
 {
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
-	auto db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
-	auto ress = db->dropDatabase(dbName);
-	ORMDatabaseFactory::getInstance()->closeAndClearAllDatabase();
-
+	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
-	db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
+
+
 
 	CarDriver driver1, driver2;
 	Car car1, car2, car3;
@@ -226,12 +210,9 @@ TEST(UnitTest_MySQL, test_ORM_HAS_MANY)
 TEST(UnitTest_MySQL, test_includes)
 {
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
-	auto db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
-	auto ress = db->dropDatabase(dbName);
-	ORMDatabaseFactory::getInstance()->closeAndClearAllDatabase();
-
+	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
-	db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
+
 
 	Car car1, car2, car3;
 	DriverLicense license1, license2;
@@ -297,13 +278,8 @@ TEST(UnitTest_MySQL, test_includes)
 TEST(UnitTest_MySQL, test_pluck)
 {
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
-	auto db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
-	auto ress = db->dropDatabase(dbName);
-	ORMDatabaseFactory::getInstance()->closeAndClearAllDatabase();
-
+	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
-	db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
-
 
 	ORM_Model model1, model2, model3;
 	model1.createTableWithRelation();
