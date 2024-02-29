@@ -6,7 +6,7 @@ QString dbName = "Test_ORMDatabase";
 QString driverName = "QMYSQL";
 QString userName = "root";
 QString hostName = "localhost";
-QString password = "123456";
+QString password = "root";
 
 
 TEST(UnitTest_MySQL, test_createTable)

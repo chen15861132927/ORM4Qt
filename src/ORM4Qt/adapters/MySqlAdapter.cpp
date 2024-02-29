@@ -253,8 +253,8 @@ int MySqlAdapter::addRecord(const QString& tableName, const QHash<QString, QVari
 		exec(QString("SHOW TABLES LIKE '%1';").arg(tableName));
 		if (!m_query.next())
 		{
-			throw std::exception(qPrintable(QString("Î´²éÑ¯µ½%1±í").arg(tableName)));
+			throw std::exception(qPrintable(QString("not find %1 table").arg(tableName)));
 		}
-		return baseresult;
 	}
+	return baseresult;
 }

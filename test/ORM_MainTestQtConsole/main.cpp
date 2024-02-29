@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
 	QString driverName = "QMYSQL";
 	QString userName = "root";
 	QString hostName = "localhost";
-	QString password = "123456";
+	QString password = "root";
 	QCoreApplication a(argc, argv);
 	/*
 	auto db = std::make_shared<ORMDatabase>(driverName);
