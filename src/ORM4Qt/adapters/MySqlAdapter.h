@@ -12,6 +12,8 @@ public:
     bool alterTable(const QString& tableName, const QHash<QString, QString>& info);
     int addRecord(const QString& tableName, const QHash<QString, QVariant>& info);
 
+protected:
+    void fillTableTypes() override;
 private:
     QHash<QString, QString> getTableColumns(const QString& tableName);
 

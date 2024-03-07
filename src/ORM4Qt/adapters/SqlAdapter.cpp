@@ -246,6 +246,7 @@ void SqlAdapter::fillTableTypes()
 {
 	m_tableTypes.insert("bool", "BOOL");
 	m_tableTypes.insert("int", "INT");
+	m_tableTypes.insert("short", "SMALLINT");
 	m_tableTypes.insert("uint", "INT UNSIGNED");
 	m_tableTypes.insert("qlonglong", "BIGINT");
 	m_tableTypes.insert("qulonglong", "BIGINT UNSIGNED");

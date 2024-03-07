@@ -33,6 +33,6 @@ public:
     bool initDB(const QString& name);
 
 protected:
-    void fillTableTypes();
+    void fillTableTypes() override;
 };
 

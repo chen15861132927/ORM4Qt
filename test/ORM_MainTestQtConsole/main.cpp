@@ -43,6 +43,6 @@ int main(int argc, char* argv[])
 
 	bool res = ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password);
 	ORM_Model model;
-	res = model.createTableWithRelation();
+	res = model.createTable();
 	return a.exec();
 }

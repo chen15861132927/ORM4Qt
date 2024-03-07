@@ -9,60 +9,71 @@ QString hostName = "localhost";
 QString password = "root";
 
 
-TEST(UnitTest_MySQL, test_createTable)
+TEST(UnitTest_MySQL, t1_CreateDatabase)
 {
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
-	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
-	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
-
-	ORM_Model model;
-	CarDriver driver;
-
-	/*
-	TODO : verify table Name can be modify.
-	model.setMapDBTableName(model.metaObject()->className() + QString("TBName"));
-	driver.setMapDBTableName(driver.metaObject()->className() + QString("TBName"));
-	license.setMapDBTableName(license.metaObject()->className() + QString("TBName"));
-	car.setMapDBTableName(car.metaObject()->className() + QString("TBName"));
-	*/
-
-	EXPECT_TRUE(model.createTableWithRelation());
-	EXPECT_EQ(driver.createTableWithRelation(), true);
 }
-
-TEST(UnitTest_MySQL, test_alter_Created_Simple_Table)
+TEST(UnitTest_MySQL, t2_SampleTable_1_CreateTable)
 {
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
 	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
-
 	auto db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
 
-	QString oldcreateSQL = "CREATE TABLE if not exists ORM_Model(id BIGINT AUTO_INCREMENT, namedouble int, nameTime TIME, nameString TEXT, nameLonglong long, m_Priority INT, nameUlonglong BIGINT UNSIGNED, nameDatetime DATETIME, m_SafeHardware INT, nameDate DATE, nameUint INT UNSIGNED, nameChar CHAR(1), nameInt INT, PRIMARY KEY(id));";
-	db->getAdapter()->exec(oldcreateSQL);
-	ORM_Model model;
-	ASSERT_ANY_THROW(model.createTableWithRelation());
-	ASSERT_NO_THROW(model.alterTable());
 
+	QDateTime dateTime = QDateTime::currentDateTime();
+	QString timemodelStr = "ORM_Model" + dateTime.toString("yyyyMMdd_hhmmss");
+
+	ORM_Model model, timemodel(timemodelStr);
+
+	EXPECT_TRUE(model.createTable());
+	EXPECT_TRUE(timemodel.createTable());
+
+	QString sqlmodel("SHOW TABLES LIKE '" + model.getMapDBTableName() + "';");
+	db->getAdapter()->exec(sqlmodel);
+	QSqlQuery query1 = db->getAdapter()->lastQSqlQuery();
+	query1.next();
+	EXPECT_EQ(query1.size(), 1);
+
+	for (int i = 0; i < query1.size(); i++)
+	{
+		auto val = query1.value(i).toString();
+		EXPECT_STRCASEEQ(model.getMapDBTableName().toStdString().c_str(), val.toStdString().c_str());
+	}
+
+	QString sqltimemodel("SHOW TABLES LIKE '" + timemodel.getMapDBTableName() + "';");
+	db->getAdapter()->exec(sqltimemodel);
+	QSqlQuery query2 = db->getAdapter()->lastQSqlQuery();
+	query2.next();
+	EXPECT_EQ(query2.size(), 1);
+
+	for (int i = 0; i < query2.size(); i++)
+	{
+		auto val = query2.value(i).toString();
+		EXPECT_STRCASEEQ(timemodel.getMapDBTableName().toStdString().c_str(), val.toStdString().c_str());
+	}
 }
-TEST(UnitTest_MySQL, test_save)
+
+TEST(UnitTest_MySQL, t2_SampleTable_2_Save)
 {
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
 	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
-
 	auto db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
 
+
+	QDateTime dateTime = QDateTime::currentDateTime();
+	QString timemodelStr = "ORM_Model" + dateTime.toString("yyyyMMdd_hhmmss");
+
+	ORM_Model model, timemodel(timemodelStr);
 	QTime time = QTime::currentTime();
-	ORM_Model model;
-	model.createTableWithRelation();
-	/*model.setMapDBTableName(model.metaObject()->className() + QString("TBName"));
-	*/
+	EXPECT_TRUE(model.createTable());
+
 	model.setnameBool(true);
 	model.setnameBlob(QByteArray(10000, '1'));
 	model.setnameChar('A');
-	model.setnameDate(QDate(2013, 03, 26));
-	model.setnameDatetime(QDateTime(QDate(2013, 03, 26), time));
+	model.setnameDate(QDate(2024, 03, 05));
+	model.setnameDatetime(QDateTime(QDate(2024, 03, 05), time));
 	model.setnamedouble(0.1);
 	model.setnameInt(10);
 	model.setnameLonglong(1234567890);
@@ -71,7 +82,9 @@ TEST(UnitTest_MySQL, test_save)
 	model.setnameUint(60000);
 	model.setnameUlonglong(123456789123456789);
 	EXPECT_EQ(model.save(), true);
-	db->getAdapter()->exec("SELECT * FROM ORM_Model;");
+
+
+	db->getAdapter()->exec("SELECT * FROM "+ model .getMapDBTableName()+";");
 	QSqlQuery query = db->getAdapter()->lastQSqlQuery();
 	query.next();
 	for (int i = 0; i < query.size(); i++)
@@ -82,9 +95,77 @@ TEST(UnitTest_MySQL, test_save)
 			EXPECT_EQ(query.value(i).toInt(), model.getId());
 	}
 
+	EXPECT_TRUE(timemodel.createTable());
+	timemodel.setnameBool(true);
+	timemodel.setnameBlob(QByteArray(10000, '1'));
+	timemodel.setnameChar('A');
+	timemodel.setnameDate(QDate(2013, 03, 26));
+	timemodel.setnameDatetime(QDateTime(QDate(2013, 03, 26), time));
+	timemodel.setnamedouble(0.001);
+	timemodel.setnameInt(1000);
+	timemodel.setnameLonglong(1234567890);
+	timemodel.setnameString("Hello world!");
+	timemodel.setnameTime(time);
+	timemodel.setnameUint(60000);
+	timemodel.setnameUlonglong(1234567891234567891);
+	EXPECT_EQ(timemodel.save(), true);
+
+
+	db->getAdapter()->exec("SELECT * FROM " + timemodel.getMapDBTableName() + ";");
+	QSqlQuery query2 = db->getAdapter()->lastQSqlQuery();
+	query2.next();
+	for (int i = 0; i < query2.size(); i++)
+	{
+		if (query2.record().fieldName(i) != timemodel.getColumnNameOf_id())
+			EXPECT_EQ(query2.value(i), timemodel.property(query2.record().fieldName(i).toLocal8Bit().constData()));
+		else
+			EXPECT_EQ(query2.value(i).toInt(), timemodel.getId());
+	}
+}
+TEST(UnitTest_MySQL, t89_RelationTable_2_CreateTable)
+{
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
+	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
+
+	ORM_Model model;
+	CarDriver driver;
+
+	EXPECT_TRUE(model.createTable());
+	EXPECT_EQ(driver.createTable(), true);
+}
+TEST(UnitTest_MySQL, t3_SampleTable_3_AlterEmptyTable1)
+{
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
+	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
+
+	auto db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
+
+	QString oldcreateSQL = "CREATE TABLE if not exists ORM_Model(id BIGINT AUTO_INCREMENT, namedouble int, nameTime TIME, nameString TEXT, nameLonglong long, m_Priority INT, nameUlonglong BIGINT UNSIGNED, nameDatetime DATETIME, m_SafeHardware INT, nameDate DATE, nameUint INT UNSIGNED, nameChar CHAR(1), nameInt INT, PRIMARY KEY(id));";
+	db->getAdapter()->exec(oldcreateSQL);
+	ORM_Model model;
+	ASSERT_ANY_THROW(EXPECT_TRUE(model.createTable()));
+	ASSERT_NO_THROW(EXPECT_TRUE(model.alterTable()));
 }
 
-TEST(UnitTest_MySQL, test_ORM_HAS_ONE)
+TEST(UnitTest_MySQL, t3_SampleTable_3_AlterEmptyTable2)
+{
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
+	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
+
+	auto db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
+
+	ORM_Model_ToBeAlert model_ToBeAlert;
+	ASSERT_NO_THROW(EXPECT_TRUE(model_ToBeAlert.createTable()));
+
+	ORM_Model model(model_ToBeAlert.getMapDBTableName());
+	ASSERT_ANY_THROW(EXPECT_TRUE(model.createTable()));
+	ASSERT_NO_THROW(EXPECT_TRUE(model.alterTable()));
+}
+
+TEST(UnitTest_MySQL, t5_ORM_HAS_ONE)
 {
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
 	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
@@ -93,7 +174,7 @@ TEST(UnitTest_MySQL, test_ORM_HAS_ONE)
 
 	CarDriver driver1, driver2;
 	DriverLicense license;
-	driver1.createTableWithRelation();
+	driver1.createTable();
 	/*driver1.setMapDBTableName(driver1.metaObject()->className() + QString("TBName"));
 	driver2.setMapDBTableName(driver2.metaObject()->className() + QString("TBName"));
 	license.setMapDBTableName(license.metaObject()->className() + QString("TBName"));*/
@@ -125,7 +206,7 @@ TEST(UnitTest_MySQL, test_ORM_HAS_ONE)
 	EXPECT_TRUE((pointer = driver1.getDriverLicense())->getId() >= 0);
 }
 
-TEST(UnitTest_MySQL, test_ORM_HAS_MANY)
+TEST(UnitTest_MySQL, t6_ORM_HAS_MANY)
 {
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
 	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
@@ -135,7 +216,7 @@ TEST(UnitTest_MySQL, test_ORM_HAS_MANY)
 
 	CarDriver driver1, driver2;
 	Car car1, car2, car3;
-	driver1.createTableWithRelation();
+	driver1.createTable();
 
 	/*driver1.setMapDBTableName(driver1.metaObject()->className() + QString("TBName"));
 	driver2.setMapDBTableName(driver2.metaObject()->className() + QString("TBName"));
@@ -207,7 +288,7 @@ TEST(UnitTest_MySQL, test_ORM_HAS_MANY)
 	EXPECT_EQ(car1.exists(car1.getId()), false);
 }
 
-TEST(UnitTest_MySQL, test_includes)
+TEST(UnitTest_MySQL, t4_includes)
 {
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
 	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
@@ -217,7 +298,7 @@ TEST(UnitTest_MySQL, test_includes)
 	Car car1, car2, car3;
 	DriverLicense license1, license2;
 	CarDriver driver1, driver2;
-	driver1.createTableWithRelation();
+	driver1.createTable();
 	/*license1.setMapDBTableName(driver1.metaObject()->className() + QString("TBName"));
 	license2.setMapDBTableName(driver2.metaObject()->className() + QString("TBName"));
 	driver1.setMapDBTableName(driver1.metaObject()->className() + QString("TBName"));
@@ -275,14 +356,14 @@ TEST(UnitTest_MySQL, test_includes)
 	EXPECT_EQ(list4.first()->getName(), QString("Peter"));
 }
 
-TEST(UnitTest_MySQL, test_pluck)
+TEST(UnitTest_MySQL, t7_pluck)
 {
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
 	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
 
 	ORM_Model model1, model2, model3;
-	model1.createTableWithRelation();
+	model1.createTable();
 	/*model1.setMapDBTableName(model1.metaObject()->className() + QString("TBName"));
 	model2.setMapDBTableName(model2.metaObject()->className() + QString("TBName"));
 	model3.setMapDBTableName(model3.metaObject()->className() + QString("TBName"));*/
@@ -303,7 +384,7 @@ TEST(UnitTest_MySQL, test_pluck)
 	EXPECT_EQ(list.value(1).toInt(), model2.getId());
 	EXPECT_EQ(list.value(2).toInt(), model3.getId());
 	list = model1.pluck(model1.getColumnNameOf_nameInt(), ORMWhere(model1.getColumnNameOf_nameString(), ORMWhere::Equals, "abc") ||
-						ORMWhere(model1.getColumnNameOf_nameString(), ORMWhere::Equals, "ghi"));
+		ORMWhere(model1.getColumnNameOf_nameString(), ORMWhere::Equals, "ghi"));
 	EXPECT_EQ(list.size(), 2);
 	EXPECT_EQ(list.value(0).toInt(), -2);
 	EXPECT_EQ(list.value(1).toInt(), 5);

@@ -50,11 +50,11 @@ bool MySqlAdapter::createTable(const QString& tableName, const QHash<QString, QS
 
 			if (!databaseColumns.contains(columnName))
 			{
-				matchtableError << "数据库没有字段" << columnName << "类型" << dataType << "\n";
+				matchtableError << "no type " << dataType <<" name "<< columnName << " field in "<< tableName<<" table" << "\n";
 			}
 			else if (databaseColumns[columnName].toLower() != dataType.toLower())
 			{
-				matchtableError << "数据库字段" << columnName << "类型不匹配" << databaseColumns[columnName] << "--" << dataType << "\n";
+				matchtableError << "no match1 Type field name " << columnName << " DBType " << databaseColumns[columnName]<<" model Type"<< dataType << "  in " << tableName << " table" << "\n";
 			}
 		}
 
@@ -69,7 +69,7 @@ bool MySqlAdapter::createTable(const QString& tableName, const QHash<QString, QS
 			}
 			else if (!info.contains(columnName))
 			{
-				matchtableError << "程序中没有字段" << columnName << "类型" << "\n";
+				matchtableError << "class model No filed " << columnName  << "\n";
 			}
 			else
 			{
@@ -77,7 +77,7 @@ bool MySqlAdapter::createTable(const QString& tableName, const QHash<QString, QS
 
 				if (i.value().toLower() != dataType.toLower())
 				{
-					matchtableError << "程序中字段" << columnName << "类型不匹配" << info[columnName] << "--" << dataType << "\n";
+					matchtableError << "no match2 Type field name " << columnName << " DBType " << databaseColumns[columnName] << " model Type" << dataType << "  in " << tableName << " table" << "\n";
 				}
 			}
 		}
@@ -105,7 +105,7 @@ bool MySqlAdapter::createTable(const QString& tableName, const QHash<QString, QS
 			}
 			else
 			{
-				throw QString("字段格式异常");
+				throw QString("field Format Error");
 			}
 		}
 		sql += QString("PRIMARY KEY (id));");
@@ -159,7 +159,7 @@ bool MySqlAdapter::alterTable(const QString& tableName, const QHash<QString, QSt
 			}
 			else if (!info.contains(columnName))
 			{
-				matchtableError << "程序中没有字段" << columnName << "类型" << "\n";
+				matchtableError << "last class model No filed '" << columnName << "',it just in DB '"<< tableName <<"' table\n";
 			}
 			else
 			{
@@ -167,19 +167,19 @@ bool MySqlAdapter::alterTable(const QString& tableName, const QHash<QString, QSt
 				QString dbColumnType = i.value();
 				if (i.value().toLower() != dataType.toLower())
 				{
-					matchtableError << "程序中字段" << columnName << "类型不匹配" << info[columnName] << "--" << dataType << "\n";
+					matchtableError << "no match2 Type field name " << columnName << " DBType " << databaseColumns[columnName] << " model Type" << dataType << "  in " << tableName << " table" << "\n";
 				}
 			}
 		}
 		m_query.clear();
 		if (matchtableError.count() > 1)
 		{
-			throw std::exception(qPrintable(matchtableError.join(" ") + "以上需要人工处理!!!!!!"));
+			throw std::exception(qPrintable(matchtableError.join(" ") + "need manual fix"));
 		}
 	}
 	else
 	{
-		throw std::exception(qPrintable(QString("未查询到%1表").arg(tableName)));
+		throw std::exception(qPrintable(QString("no find %1 table").arg(tableName)));
 	}
 	return res;
 }
@@ -257,4 +257,21 @@ int MySqlAdapter::addRecord(const QString& tableName, const QHash<QString, QVari
 		}
 	}
 	return baseresult;
+}
+
+void MySqlAdapter::fillTableTypes()
+{
+	m_tableTypes.insert("bool", "tinyint(1)");
+	m_tableTypes.insert("int", "INT");
+	m_tableTypes.insert("short", "SMALLINT");
+	m_tableTypes.insert("uint", "INT UNSIGNED");
+	m_tableTypes.insert("qlonglong", "BIGINT");
+	m_tableTypes.insert("qulonglong", "BIGINT UNSIGNED");
+	m_tableTypes.insert("double", "DOUBLE");
+	m_tableTypes.insert("QByteArray", "BLOB");
+	m_tableTypes.insert("QChar", "CHAR(1)");
+	m_tableTypes.insert("QDate", "DATE");
+	m_tableTypes.insert("QTime", "TIME");
+	m_tableTypes.insert("QDateTime", "DATETIME");
+	m_tableTypes.insert("QString", "TEXT");
 }

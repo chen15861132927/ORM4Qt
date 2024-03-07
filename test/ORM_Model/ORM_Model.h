@@ -21,9 +21,33 @@ public:
 	}
 
 };
+
+class ORM_MODEL_EXPORT ORM_Model_ToBeAlert : public ORMObject<ORM_Model_ToBeAlert>
+{
+public:
+ 
+	Q_OBJECT;
+
+	ORM_PROPERTY(bool, nameBool, false);
+
+	ORM_PROPERTY(short, nameUint, 0);
+	ORM_PROPERTY(qlonglong, nameLonglong, 0);
+	ORM_PROPERTY(qulonglong, nameUlonglong, 0);
+	ORM_PROPERTY(short, namedouble, 0);
+	ORM_PROPERTY(QByteArray, nameBlob, "");
+ 
+	ORM_PROPERTY(QTime, nameDatetime, QTime());
+	ORM_PROPERTY(QString, nameString, "");
+ 	ORM_PROPERTY(OutClassEnumType::OutClassEnumDemoPriority, OutEnumDemoPriority, OutClassEnumType::OutClassEnumDemoPriority::High);//0--X 1--Y 2--Z
+
+	ORM_CONSTRUCTOR(ORM_Model_ToBeAlert);
+
+};
+
 class ORM_MODEL_EXPORT ORM_Model : public ORMObject<ORM_Model>
 {
 public:
+
 	enum class InClassEnumPriority
 	{
 		High = 1,
@@ -50,8 +74,7 @@ public:
 	ORM_PROPERTY(InClassEnumPriority, InEnumPriority, InClassEnumPriority::Low);
 	ORM_PROPERTY(OutClassEnumType::OutClassEnumDemoPriority, OutEnumDemoPriority, OutClassEnumType::OutClassEnumDemoPriority::High);//0--X 1--Y 2--Z
 
-public:
-	ORM_Model() {};
+	ORM_CONSTRUCTOR(ORM_Model);
 };
 
 class ORM_MODEL_EXPORT Car : public ORMObject<Car>
@@ -78,7 +101,7 @@ class ORM_MODEL_EXPORT CarDriver : public ORMObject<CarDriver>
 	ORM_HAS_ONE(DriverLicense);
 	ORM_HAS_MANY(Car);
 	ORM_PROPERTY(QString, Name, "");
-	
+
 public:
 	CarDriver() {}
 };

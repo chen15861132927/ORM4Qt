@@ -104,7 +104,7 @@ protected:\
     {\
         ClassName _##ClassName##; \
         _##ClassName##.setAdapter(m_adapter);\
-        return _##ClassName##.createTableWithRelation(); \
+        return _##ClassName##.createTable(); \
     }\
 private: \
     QSqlRecord m_##ClassName##AfterIncludes; \
@@ -208,7 +208,7 @@ protected:\
     {\
         ClassName _##ClassName##; \
         _##ClassName##.setAdapter(m_adapter);\
-        return _##ClassName##.createTableWithRelation(); \
+        return _##ClassName##.createTable(); \
     }\
 private: \
     QList<QSqlRecord> m_##ClassName##AfterIncludes; \
@@ -289,3 +289,10 @@ private: \
         ClassName _##ClassName##; \
         return _##ClassName##.alterTable(); \
     }
+
+
+#define ORM_CONSTRUCTOR(ClassName) \
+public:\
+    ##ClassName##() : ORMObject<ClassName>() {};\
+\
+    ##ClassName##(QString tableName) : ORMObject<ClassName>(tableName) {}

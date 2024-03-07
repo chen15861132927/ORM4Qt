@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <QObject>
+#include <QString> 
 #include <QMetaProperty>
 #include <QSqlRecord>
 #include <QVector>
@@ -53,12 +54,26 @@ public:
 			setAdapter(defaultdb->getAdapter());
 		}
 	}
+
+	explicit ORMObject(QString tableName, QObject* parent = nullptr) : QObject(parent)
+	{
+		id = -1;
+		m_hasUnsavedChanges = false;
+
+		auto defaultdb = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
+		if (defaultdb != nullptr)
+		{
+			setAdapter(defaultdb->getAdapter());
+		}
+		setMapDBTableName(tableName);
+	}
+ 
 	/*!
 	Creates table associated with model with Relation(one or many).
 
 	Returns true if table created, otherwise return false.
 	*/
-	bool createTableWithRelation()
+	bool createTable()
 	{
 		bool res = createTableNoRelation();
 		if (res)
@@ -562,6 +577,7 @@ public:
 		m_propertiesForUpdate.clear();
 		m_hasUnsavedChanges = false;
 	}
+
 	void setMapDBTableName(QString mapDBTableName)
 	{
 		m_isSettingTableNameBySelf = true;
