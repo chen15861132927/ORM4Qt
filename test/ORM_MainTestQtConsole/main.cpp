@@ -8,11 +8,11 @@
 #include "../../src/ORM4Qt/ORMDatabaseFactory.h"
 int main(int argc, char* argv[])
 {
-	QString dbName = "Test_ORMDatabase";
-	QString driverName = "QMYSQL";
-	QString userName = "root";
-	QString hostName = "localhost";
-	QString password = "root";
+	//QString dbName = "Test_ORMDatabase";
+	//QString driverName = "QMYSQL";
+	//QString userName = "root";
+	//QString hostName = "localhost";
+	//QString password = "root";
 	QCoreApplication a(argc, argv);
 	/*
 	auto db = std::make_shared<ORMDatabase>(driverName);
@@ -41,8 +41,29 @@ int main(int argc, char* argv[])
 	}
 	*/
 
-	bool res = ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password);
+	//bool res = ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password);
 	ORM_Model model;
-	res = model.createTable();
+	//res = model.createTable();
+	for (int i = model.metaObject()->propertyOffset(); i < model.metaObject()->propertyCount(); i++)
+	{
+		auto pro = model.metaObject()->property(i);
+		auto namenow = pro.name();
+		auto ptype = pro.type();
+		bool writeres=false;
+		QVariant chard = QString('A');
+
+		if (ptype == QVariant::Char || ptype == 34)
+		{
+			QChar tempval = chard.toChar();
+			if (chard.type() == QVariant::String)
+			{
+				tempval = chard.toString().at(0);
+			}
+			writeres = pro.write(&model, tempval);
+		}
+ 
+	}
+
+
 	return a.exec();
 }

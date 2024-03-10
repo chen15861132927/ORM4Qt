@@ -130,8 +130,8 @@ public:
 			}
 		}
 
-		bool res = false;
-		try
+		bool res = alertTableNoRelation();
+		/*try
 		{
 			res = alertTableNoRelation();
 		}
@@ -139,7 +139,7 @@ public:
 		{
 			qDebug(ex.what());
 			res = false;
-		}
+		}*/
 
 		//父表不成功,子表依然需要修改
 		if (res)
@@ -513,54 +513,7 @@ public:
 		return m_adapter->calculation(ORMAbstractAdapter::Sum, getMapDBTableName(),
 									  fieldName, condition.getWhereString());
 	}
-	/*!
-	   Find all models that match \a condition and immediately load all relations that contains in \a list.
-	   This method sovle n+1 problem, ORM execute 1 + list.size() queries. Child objects may be get with
-	   get<em>ChildModelName</em>AfterInclude method.
 
-	   Returns list of found models.
-	 */
-	QList<std::shared_ptr<ModelName>> includes(const QStringList& list, ORMWhere condition = ORMWhere())
-	{
-		QHash<QString, QList<QSqlRecord> > hash = m_adapter->includes(getMapDBTableName(), list,
-																	  condition.getWhereString());
-		QHash<int, int> idIndexHash;
-		QList<std::shared_ptr<ModelName>> result;
-		QList<QSqlRecord> currentList = hash.take(getMapDBTableName());
-		QString currentModelName;
-		QString fieldName = (QString("%1_") + getColumnNameOf_id()).arg(getMapDBTableName());
-		for (int i = 0; i < currentList.size(); i++)
-		{
-			result.append(translateRecToObj<ModelName>(currentList.value(i), m_adapter));
-			idIndexHash.insert(currentList.value(i).field(getColumnNameOf_id()).value().toInt(), i);
-		}
-		foreach(currentModelName, hash.keys())
-		{
-			QString methodName = QString("add%1AfterIncludes").arg(currentModelName);
-			currentList = hash.take(currentModelName);
-			for (int i = 0; i < currentList.size(); i++)
-			{
-				auto itemindex = idIndexHash.value(currentList.value(i).field(fieldName).value().toInt());
-				QMetaObject::invokeMethod(result.value(itemindex).get(),
-										  qPrintable(methodName), Q_ARG(QSqlRecord, currentList.value(i)));
-			}
-		}
-		return result;
-	}
-	/*!
-	   Select \a fieldName from object that match \a condition.
-
-	   Returns list of found \a fieldName.
-	 */
-	QList<QVariant> pluck(QString fieldName, ORMWhere condition = ORMWhere(), ORMGroupBy group = ORMGroupBy())
-	{
-		QList<QSqlRecord> list = m_adapter->find(getMapDBTableName(), fieldName, condition.getWhereString() + " "
-												 + group.getGroupString());
-		QList<QVariant> result;
-		for (int i = 0; i < list.size(); i++)
-			result.append(list.value(i).value(0));
-		return result;
-	}
 	QString toString()
 	{
 		QString str;
@@ -637,12 +590,50 @@ protected:
 		QString currentFieldName;
 		for (int i = 1; i < result->metaObject()->propertyCount(); i++)
 		{
+			bool writeres;
 			currentFieldName = QString(result->metaObject()->property(i).name());
 			QMetaProperty itemProperty = result->metaObject()->property(i);
 			if (record.contains(currentFieldName))
-				itemProperty.write(result.get(), record.value(currentFieldName));
+			{
+				auto tempVal = record.value(currentFieldName);
+				auto ttype=tempVal.type();
+				auto ptype = itemProperty.type();
+
+				if (ptype == QVariant::Char|| ptype== 34)
+				{
+					if (tempVal.type() == QVariant::String)
+					{
+						writeres = itemProperty.write(result.get(), tempVal.toString().at(0));
+					}
+					else
+					{
+						writeres = itemProperty.write(result.get(), tempVal.toChar());
+					}
+				}
+				else
+				{
+					writeres = itemProperty.write(result.get(), tempVal);
+				}
+			}
 			else if (record.contains(currentFieldName.toLower()))
-				itemProperty.write(result.get(), record.value(currentFieldName.toLower()));
+			{
+				auto tempVal = record.value(currentFieldName.toLower());
+				if (tempVal.type() == QVariant::Char)
+				{
+					if (tempVal.type() == QVariant::String)
+					{
+						writeres = itemProperty.write(result.get(), tempVal.toString().at(0));
+					}
+					else
+					{
+						writeres = itemProperty.write(result.get(), tempVal.toChar());
+					}
+				}
+				else
+				{
+					writeres = itemProperty.write(result.get(), tempVal);
+				}
+			}
 		}
 		result->setId(record.value(result->getColumnNameOf_id()).toInt());
 		result->clearUpdateList();
@@ -704,6 +695,57 @@ private:
 
 		return res;
 	}
+
+	/*!
+	   Find all models that match \a condition and immediately load all relations that contains in \a list.
+	   This method sovle n+1 problem, ORM execute 1 + list.size() queries. Child objects may be get with
+	   get<em>ChildModelName</em>AfterInclude method.
+
+	   Returns list of found models.
+	 */
+	QList<std::shared_ptr<ModelName>> includes(const QStringList& list, ORMWhere condition = ORMWhere())
+	{
+		QHash<QString, QList<QSqlRecord> > hash = m_adapter->includes(getMapDBTableName(), list,
+			condition.getWhereString());
+		QHash<int, int> idIndexHash;
+		QList<std::shared_ptr<ModelName>> result;
+		QList<QSqlRecord> currentList = hash.take(getMapDBTableName());
+		QString currentModelName;
+		QString fieldName = (QString("%1_") + getColumnNameOf_id()).arg(getMapDBTableName());
+		for (int i = 0; i < currentList.size(); i++)
+		{
+			result.append(translateRecToObj<ModelName>(currentList.value(i), m_adapter));
+			idIndexHash.insert(currentList.value(i).field(getColumnNameOf_id()).value().toInt(), i);
+		}
+		foreach(currentModelName, hash.keys())
+		{
+			QString methodName = QString("add%1AfterIncludes").arg(currentModelName);
+			currentList = hash.take(currentModelName);
+			for (int i = 0; i < currentList.size(); i++)
+			{
+				auto itemindex = idIndexHash.value(currentList.value(i).field(fieldName).value().toInt());
+				QMetaObject::invokeMethod(result.value(itemindex).get(),
+					qPrintable(methodName), Q_ARG(QSqlRecord, currentList.value(i)));
+			}
+		}
+		return result;
+	}
+
+	/*!
+	   Select \a fieldName from object that match \a condition.
+
+	   Returns list of found \a fieldName.
+	 */
+	QList<QVariant> pluck(QString fieldName, ORMWhere condition = ORMWhere(), ORMGroupBy group = ORMGroupBy())
+	{
+		QList<QSqlRecord> list = m_adapter->find(getMapDBTableName(), fieldName, condition.getWhereString() + " "
+			+ group.getGroupString());
+		QList<QVariant> result;
+		for (int i = 0; i < list.size(); i++)
+			result.append(list.value(i).value(0));
+		return result;
+	}
+
 	mutable QString m_mapDBTableName = "";
 
 	bool m_isSettingTableNameBySelf = false;

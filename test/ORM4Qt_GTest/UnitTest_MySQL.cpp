@@ -13,7 +13,7 @@ TEST(UnitTest_MySQL, t1_CreateDatabase)
 {
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
 }
-TEST(UnitTest_MySQL, t2_SampleTable_1_CreateTable)
+TEST(UnitTest_MySQL, t2_SingleTable_1_CreateTable)
 {
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
 	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
@@ -54,7 +54,7 @@ TEST(UnitTest_MySQL, t2_SampleTable_1_CreateTable)
 	}
 }
 
-TEST(UnitTest_MySQL, t2_SampleTable_2_Save)
+TEST(UnitTest_MySQL, t2_SingleTable_2_Save)
 {
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
 	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
@@ -81,10 +81,13 @@ TEST(UnitTest_MySQL, t2_SampleTable_2_Save)
 	model.setnameTime(time);
 	model.setnameUint(60000);
 	model.setnameUlonglong(123456789123456789);
+	model.setOutEnumDemoPriority(OutClassEnumType::OutClassEnumDemoPriority::VeryHigh);
+	model.setInEnumPriority(ORM_Model::InClassEnumPriority::VeryHigh);
+
 	EXPECT_EQ(model.save(), true);
 
 
-	db->getAdapter()->exec("SELECT * FROM "+ model .getMapDBTableName()+";");
+	db->getAdapter()->exec("SELECT * FROM " + model.getMapDBTableName() + ";");
 	QSqlQuery query = db->getAdapter()->lastQSqlQuery();
 	query.next();
 	for (int i = 0; i < query.size(); i++)
@@ -108,6 +111,10 @@ TEST(UnitTest_MySQL, t2_SampleTable_2_Save)
 	timemodel.setnameTime(time);
 	timemodel.setnameUint(60000);
 	timemodel.setnameUlonglong(1234567891234567891);
+
+	timemodel.setOutEnumDemoPriority(OutClassEnumType::OutClassEnumDemoPriority::Low);
+	timemodel.setInEnumPriority(ORM_Model::InClassEnumPriority::VeryHigh);
+
 	EXPECT_EQ(timemodel.save(), true);
 
 
@@ -134,7 +141,7 @@ TEST(UnitTest_MySQL, t89_RelationTable_2_CreateTable)
 	EXPECT_TRUE(model.createTable());
 	EXPECT_EQ(driver.createTable(), true);
 }
-TEST(UnitTest_MySQL, t3_SampleTable_3_AlterEmptyTable1)
+TEST(UnitTest_MySQL, t3_SingleTable_3_AlterEmptyTable1)
 {
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
 	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
@@ -146,10 +153,10 @@ TEST(UnitTest_MySQL, t3_SampleTable_3_AlterEmptyTable1)
 	db->getAdapter()->exec(oldcreateSQL);
 	ORM_Model model;
 	ASSERT_ANY_THROW(EXPECT_TRUE(model.createTable()));
-	ASSERT_NO_THROW(EXPECT_TRUE(model.alterTable()));
+	ASSERT_ANY_THROW(EXPECT_FALSE(model.alterTable()));
 }
 
-TEST(UnitTest_MySQL, t3_SampleTable_3_AlterEmptyTable2)
+TEST(UnitTest_MySQL, t3_SingleTable_3_AlterEmptyTable2)
 {
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
 	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
@@ -164,7 +171,163 @@ TEST(UnitTest_MySQL, t3_SampleTable_3_AlterEmptyTable2)
 	ASSERT_ANY_THROW(EXPECT_TRUE(model.createTable()));
 	ASSERT_NO_THROW(EXPECT_TRUE(model.alterTable()));
 }
+TEST(UnitTest_MySQL, t3_SingleTable_4_AlterDataTable1)
+{
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
+	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
 
+	auto db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
+	QDateTime dateTime = QDateTime::currentDateTime();
+	QTime time = QTime::currentTime();
+
+	ORM_Model_ToBeAlert model_ToBeAlert;
+	ASSERT_NO_THROW(EXPECT_TRUE(model_ToBeAlert.createTable()));
+	model_ToBeAlert.setnameBool(true);
+	model_ToBeAlert.setnameBlob(QByteArray(10000, '1'));
+	model_ToBeAlert.setnamedouble(0.001);
+	model_ToBeAlert.setnameLonglong(0.36f);
+	model_ToBeAlert.setnameString("Hello world!");
+	model_ToBeAlert.setnameDatetime(time);
+	model_ToBeAlert.setOutEnumDemoPriority(OutClassEnumType::OutClassEnumDemoPriority::VeryHigh);
+	model_ToBeAlert.setnameUint(100);
+	model_ToBeAlert.setnameUlonglong(1234567891234567891);
+	EXPECT_EQ(model_ToBeAlert.save(), true);
+	ORM_Model model(model_ToBeAlert.getMapDBTableName());
+	ASSERT_ANY_THROW(EXPECT_TRUE(model.createTable()));
+	ASSERT_NO_THROW(EXPECT_TRUE(model.alterTable()));
+
+	model.setnameBool(true);
+	model.setnameBlob(QByteArray(10000, '1'));
+	model.setnameChar('A');
+	model.setnameDate(QDate(2024, 03, 05));
+	model.setnameDatetime(QDateTime(QDate(2024, 03, 05), time));
+	model.setnamedouble(0.1);
+	model.setnameInt(10);
+	model.setnameLonglong(1234567890);
+	model.setnameString("Hello world!");
+	model.setnameTime(time);
+	model.setnameUint(60000);
+	model.setnameUlonglong(123456789123456789);
+	model.setOutEnumDemoPriority(OutClassEnumType::OutClassEnumDemoPriority::VeryHigh);
+	model.setInEnumPriority(ORM_Model::InClassEnumPriority::VeryHigh);
+
+	EXPECT_EQ(model.save(), true);
+}
+
+TEST(UnitTest_MySQL, t3_SingleTable_4_AlterDataTable2_ShortToUIntFail)
+{
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
+	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
+
+	auto db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
+	QDateTime dateTime = QDateTime::currentDateTime();
+	QTime time = QTime::currentTime();
+
+	ORM_Model_ToBeAlert model_ToBeAlert;
+	ASSERT_NO_THROW(EXPECT_TRUE(model_ToBeAlert.createTable()));
+	model_ToBeAlert.setnameBool(true);
+	model_ToBeAlert.setnameBlob(QByteArray(10000, '1'));
+	model_ToBeAlert.setnamedouble(0.001);
+	model_ToBeAlert.setnameLonglong(0.56f);
+	model_ToBeAlert.setnameString("Hello world!");
+	model_ToBeAlert.setnameDatetime(time);
+	model_ToBeAlert.setOutEnumDemoPriority(OutClassEnumType::OutClassEnumDemoPriority::VeryHigh);
+	model_ToBeAlert.setnameUint(-100);
+	model_ToBeAlert.setnameUlonglong(1234567891234567891);
+	EXPECT_EQ(model_ToBeAlert.save(), true);
+	ORM_Model model(model_ToBeAlert.getMapDBTableName());
+	ASSERT_ANY_THROW(EXPECT_TRUE(model.createTable()));
+	ASSERT_ANY_THROW(EXPECT_FALSE(model.alterTable()));
+}
+
+TEST(UnitTest_MySQL, t4_SingleTable_5_Select1All)
+{
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
+	ORMDatabaseFactory::getInstance()->dropDatabase(dbName);
+	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
+	auto db = ORMDatabaseFactory::getInstance()->getDefaultDatabase();
+
+
+	QDateTime dateTime = QDateTime::currentDateTime();
+	QString timemodelStr = "ORM_Model" + dateTime.toString("yyyyMMdd_hhmmss");
+
+	std::shared_ptr<ORM_Model> model = std::make_shared<ORM_Model>(timemodelStr);
+	QTime time = QTime::currentTime();
+	EXPECT_TRUE(model->createTable());
+
+	QList<std::shared_ptr<ORM_Model>> models;
+	model->setnameBool(true);
+	model->setnameBlob(QByteArray(10000, '1'));
+	model->setnameChar('A');
+	model->setnameDate(QDate(2024, 03, 05));
+	model->setnameDatetime(QDateTime(QDate(2024, 03, 05), time));
+	model->setnamedouble(0.1);
+	model->setnameInt(10);
+	model->setnameLonglong(1234567890);
+	model->setnameString("Hello world!");
+	model->setnameTime(QTime::currentTime());
+	model->setnameUint(60000);
+	model->setnameUlonglong(123456789123456789);
+	model->setOutEnumDemoPriority(OutClassEnumType::OutClassEnumDemoPriority::VeryHigh);
+	model->setInEnumPriority(ORM_Model::InClassEnumPriority::VeryHigh);
+	EXPECT_EQ(model->save(), true);
+	models.append(model);
+
+	std::shared_ptr<ORM_Model> model1 = std::make_shared<ORM_Model>(timemodelStr);
+	model1->setnameBool(false);
+	model1->setnameBlob(QByteArray(10000, '2'));
+	model1->setnameChar('C');
+	model1->setnameDate(QDate(2013, 03, 26));
+	model1->setnameDatetime(QDateTime(QDate(2013, 03, 26), time));
+	model1->setnamedouble(0.001);
+	model1->setnameInt(1000);
+	model1->setnameLonglong(1234567890122);
+	model1->setnameString("Hello setnameString!");
+	model1->setnameTime(QTime::currentTime());
+	model1->setnameUint(90000);
+	model1->setnameUlonglong(1234567891234567891);
+	model1->setOutEnumDemoPriority(OutClassEnumType::OutClassEnumDemoPriority::Low);
+	model1->setInEnumPriority(ORM_Model::InClassEnumPriority::High);
+	EXPECT_EQ(model1->save(), true);
+	models.append(model1);
+
+	db->getAdapter()->exec("SELECT * FROM " + model->getMapDBTableName() + ";");
+	QSqlQuery query = db->getAdapter()->lastQSqlQuery();
+	for (int j = 0; query.next() && j < models.count(); j++)
+	{
+		for (int i = 0; i < query.size(); i++)
+		{
+			if (query.record().fieldName(i) != models[j]->getColumnNameOf_id())
+				EXPECT_EQ(query.value(i), models[j]->property(query.record().fieldName(i).toLocal8Bit().constData()));
+			else
+				EXPECT_EQ(query.value(i).toInt(), models[j]->getId());
+		}
+	}
+
+	ORM_Model modelSelect(timemodelStr);
+	auto slectModels = modelSelect.findAll();
+	for (int j = 0; j < models.count(); j++)
+	{
+		for (int i = modelSelect.metaObject()->propertyOffset(); i < modelSelect.metaObject()->propertyCount(); i++)
+		{
+			auto pro = modelSelect.metaObject()->property(i);
+			auto namenow = pro.name();
+			QVariant vla = models[j]->property(pro.name());
+			QVariant vlb = slectModels[j]->property(pro.name());
+
+			EXPECT_EQ(vla, vlb);
+
+		}
+	}
+
+}
+
+TEST(UnitTest_MySQL, t4_SingleTable_5_Select2ByID)
+{
+
+}
 TEST(UnitTest_MySQL, t5_ORM_HAS_ONE)
 {
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
@@ -175,9 +338,6 @@ TEST(UnitTest_MySQL, t5_ORM_HAS_ONE)
 	CarDriver driver1, driver2;
 	DriverLicense license;
 	driver1.createTable();
-	/*driver1.setMapDBTableName(driver1.metaObject()->className() + QString("TBName"));
-	driver2.setMapDBTableName(driver2.metaObject()->className() + QString("TBName"));
-	license.setMapDBTableName(license.metaObject()->className() + QString("TBName"));*/
 
 	std::shared_ptr<DriverLicense> pointer;
 	driver1.removeAll();
@@ -217,12 +377,6 @@ TEST(UnitTest_MySQL, t6_ORM_HAS_MANY)
 	CarDriver driver1, driver2;
 	Car car1, car2, car3;
 	driver1.createTable();
-
-	/*driver1.setMapDBTableName(driver1.metaObject()->className() + QString("TBName"));
-	driver2.setMapDBTableName(driver2.metaObject()->className() + QString("TBName"));
-	car1.setMapDBTableName(car1.metaObject()->className() + QString("TBName"));
-	car2.setMapDBTableName(car2.metaObject()->className() + QString("TBName"));
-	car3.setMapDBTableName(car3.metaObject()->className() + QString("TBName"));*/
 
 	std::shared_ptr<Car> pointer;
 	driver1.removeAll();
@@ -288,6 +442,7 @@ TEST(UnitTest_MySQL, t6_ORM_HAS_MANY)
 	EXPECT_EQ(car1.exists(car1.getId()), false);
 }
 
+/*
 TEST(UnitTest_MySQL, t4_includes)
 {
 	EXPECT_TRUE(ORMDatabaseFactory::getInstance()->registerDatabase(dbName, hostName, userName, password));
@@ -299,13 +454,7 @@ TEST(UnitTest_MySQL, t4_includes)
 	DriverLicense license1, license2;
 	CarDriver driver1, driver2;
 	driver1.createTable();
-	/*license1.setMapDBTableName(driver1.metaObject()->className() + QString("TBName"));
-	license2.setMapDBTableName(driver2.metaObject()->className() + QString("TBName"));
-	driver1.setMapDBTableName(driver1.metaObject()->className() + QString("TBName"));
-	driver2.setMapDBTableName(driver2.metaObject()->className() + QString("TBName"));
-	car1.setMapDBTableName(car1.metaObject()->className() + QString("TBName"));
-	car2.setMapDBTableName(car2.metaObject()->className() + QString("TBName"));
-	car3.setMapDBTableName(car3.metaObject()->className() + QString("TBName"));*/
+
 	car1.removeAll();
 	license1.removeAll();
 	driver1.removeAll();
@@ -364,10 +513,6 @@ TEST(UnitTest_MySQL, t7_pluck)
 
 	ORM_Model model1, model2, model3;
 	model1.createTable();
-	/*model1.setMapDBTableName(model1.metaObject()->className() + QString("TBName"));
-	model2.setMapDBTableName(model2.metaObject()->className() + QString("TBName"));
-	model3.setMapDBTableName(model3.metaObject()->className() + QString("TBName"));*/
-
 	model1.removeAll();
 	model1.setnameInt(-2);
 	model1.setnameString("abc");
@@ -393,3 +538,4 @@ TEST(UnitTest_MySQL, t7_pluck)
 	list = model1.pluck(model1.getColumnNameOf_nameString(), ORMWhere(), ORMGroupBy(model1.getColumnNameOf_nameString()));
 	EXPECT_EQ(list.size(), 2);
 }
+*/

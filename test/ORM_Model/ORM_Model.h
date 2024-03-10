@@ -31,7 +31,7 @@ public:
 	ORM_PROPERTY(bool, nameBool, false);
 
 	ORM_PROPERTY(short, nameUint, 0);
-	ORM_PROPERTY(qlonglong, nameLonglong, 0);
+	ORM_PROPERTY(float, nameLonglong, 0);
 	ORM_PROPERTY(qulonglong, nameUlonglong, 0);
 	ORM_PROPERTY(short, namedouble, 0);
 	ORM_PROPERTY(QByteArray, nameBlob, "");

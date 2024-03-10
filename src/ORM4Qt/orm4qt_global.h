@@ -106,13 +106,7 @@ protected:\
         _##ClassName##.setAdapter(m_adapter);\
         return _##ClassName##.createTable(); \
     }\
-private: \
-    QSqlRecord m_##ClassName##AfterIncludes; \
-    Q_INVOKABLE void add##ClassName##AfterIncludes(QSqlRecord rec) \
-    { \
-        m_##ClassName##AfterIncludes = rec; \
-    } \
-    public: \
+public: \
     std::shared_ptr<ClassName> get##ClassName() \
     { \
         if(id < 0) \
@@ -141,10 +135,6 @@ private: \
         values.insert(QString("%1_"+getColumnNameOf_id()).arg(getMapDBTableName()), id); \
         int childId = m_adapter->addRecord(#ClassName, values); \
         return translateRecToObj<ClassName>(m_adapter->find(#ClassName, "*","WHERE "+getColumnNameOf_id()+" = " + QString::number(childId)).first(),m_adapter); \
-    } \
-    std::shared_ptr<ClassName> get##ClassName##AfterIncludes() const\
-    { \
-        return translateRecToObj<ClassName>(m_##ClassName##AfterIncludes,m_adapter); \
     } \
     bool remove##ClassName(qlonglong id) \
     { \
@@ -210,13 +200,7 @@ protected:\
         _##ClassName##.setAdapter(m_adapter);\
         return _##ClassName##.createTable(); \
     }\
-private: \
-    QList<QSqlRecord> m_##ClassName##AfterIncludes; \
-    Q_INVOKABLE void add##ClassName##AfterIncludes(QSqlRecord rec) \
-    { \
-        m_##ClassName##AfterIncludes.append(rec); \
-    } \
-    public: \
+public: \
     QList<std::shared_ptr<ClassName>> getAll##ClassName(ORMGroupBy group = ORMGroupBy(), ORMOrderBy order = ORMOrderBy()) \
     { \
         QList<std::shared_ptr<ClassName>> result; \
@@ -263,13 +247,6 @@ private: \
             for(int i = 0; i < list.size(); i++) \
                 result.append(translateRecToObj<ClassName>(list.value(i),m_adapter)); \
         return result; \
-    } \
-    QList<std::shared_ptr<ClassName>> get##ClassName##AfterIncludes() const \
-    { \
-        QList<std::shared_ptr<ClassName>> list; \
-        for(int i = 0; i < m_##ClassName##AfterIncludes.size(); i++) \
-            list.append(translateRecToObj<ClassName>(m_##ClassName##AfterIncludes.value(i),m_adapter)); \
-        return list; \
     } \
     bool remove##ClassName(qlonglong id) \
     { \
